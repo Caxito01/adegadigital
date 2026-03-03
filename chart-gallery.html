@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Chart Gallery — 3D & Avançados</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800;900&display=swap');
+
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#070a0f;
+  --card:#0e1420;
+  --border:#1e2d42;
+  --text:#dde6f0;
+  --muted:#4a6080;
+  --accent:#00e5ff;
+  --green:#00ff9d;
+  --yellow:#ffe066;
+  --pink:#ff4d8d;
+  --orange:#ff8c42;
+  --purple:#b06bff;
+}
+body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden}
+
+/* HEADER */
+header{padding:2.5rem 2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1.5rem}
+header h1{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:900;letter-spacing:-0.04em;
+  background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header span{font-size:.65rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+
+/* TABS */
+.tabs{display:flex;gap:.5rem;padding:1.5rem 2rem .5rem;flex-wrap:wrap}
+.tab{padding:.4rem 1rem;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+  border:1px solid var(--border);border-radius:100px;color:var(--muted);background:transparent;transition:.2s all;font-family:inherit}
+.tab.active,.tab:hover{border-color:var(--accent);color:var(--accent)}
+.tab.active{background:rgba(0,229,255,.08)}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:1.5rem;padding:1.5rem 2rem 3rem}
+.section{display:none}.section.active{display:grid;grid-template-columns:inherit}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem}
+.card-title{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.card-label{font-size:.55rem;letter-spacing:.15em;color:var(--muted);text-align:center;margin-top:.3rem}
+canvas.chart3d{width:100%!important;border-radius:8px;cursor:grab}
+canvas.chart3d:active{cursor:grabbing}
+
+/* 2D Charts */
+svg text{font-family:'Space Mono',monospace}
+
+/* HEATMAP */
+.heatmap-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:3px}
+.heatmap-cell{aspect-ratio:1;border-radius:3px;transition:.2s}
+.heatmap-cell:hover{transform:scale(1.3);z-index:10;position:relative}
+.heatmap-labels{display:grid;grid-template-columns:repeat(12,1fr);gap:3px;margin-top:4px}
+.heatmap-label{font-size:.5rem;color:var(--muted);text-align:center}
+
+/* TREEMAP */
+.treemap{position:relative;height:280px;width:100%;border-radius:8px;overflow:hidden}
+.treemap-cell{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;transition:.15s;border:2px solid var(--card)}
+.treemap-cell:hover{filter:brightness(1.2);z-index:5}
+.treemap-cell span{font-size:.65rem;font-weight:700;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.6);text-align:center;padding:.2rem}
+.treemap-cell small{font-size:.5rem;opacity:.8;color:#fff}
+
+/* WATERFALL */
+.wf-bar{transition:.2s;cursor:pointer}.wf-bar:hover{filter:brightness(1.3)}
+
+/* BUBBLE */
+.bubble{transition:.2s;cursor:pointer}.bubble:hover{opacity:.9}
+
+/* SANKEY */
+.sankey-flow{opacity:.5;transition:.2s}.sankey-flow:hover{opacity:.85}
+
+/* STEP AREA */
+.step-area{transition:.2s}
+
+/* LEGEND */
+.legend{display:flex;flex-wrap:wrap;gap:.5rem .8rem;margin-top:.3rem}
+.legend-item{display:flex;align-items:center;gap:.3rem;font-size:.55rem;color:var(--muted)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Chart Gallery</h1>
+    <span>Exemplos 3D &amp; avançados · Dados simulados</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="show('s3d',this)">🎲 3D Charts</button>
+  <button class="tab" onclick="show('s2d',this)">📊 2D Avançados</button>
+  <button class="tab" onclick="show('sflow',this)">🔀 Fluxo / Relação</button>
+</div>
+
+<!-- ═══════════ 3D ═══════════ -->
+<div id="s3d" class="section active grid">
+
+  <div class="card">
+    <div class="card-title">3D Bar Chart — Receita por Mês</div>
+    <canvas id="c3dbar" class="chart3d" height="280"></canvas>
+    <div class="card-label">Arraste para rotacionar · Scroll para zoom</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3D Scatter Plot — Custo × Prazo × Nota</div>
+    <canvas id="c3dscatter" class="chart3d" height="280"></canvas>
+    <div class="card-label">Cada esfera = 1 projeto</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3D Surface / Terrain — Risco × Impacto</div>
+    <canvas id="c3dsurf" class="chart3d" height="280"></canvas>
+    <div class="card-label">Mapa de calor em superfície 3D</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3D Donut — Distribuição de Orçamento</div>
+    <canvas id="c3dpie" class="chart3d" height="280"></canvas>
+    <div class="card-label">Auto-rotação · Hover para destacar</div>
+    <div class="legend" id="pielegend"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3D Stacked Bars — Equipes por Trimestre</div>
+    <canvas id="c3dstack" class="chart3d" height="280"></canvas>
+    <div class="card-label">Barras empilhadas em perspectiva</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">3D Globe — Projetos por País</div>
+    <canvas id="c3dglobe" class="chart3d" height="280"></canvas>
+    <div class="card-label">Pontos proporcionais ao volume</div>
+  </div>
+
+</div>
+
+<!-- ═══════════ 2D AVANÇADOS ═══════════ -->
+<div id="s2d" class="section grid">
+
+  <div class="card">
+    <div class="card-title">Heatmap — Entregas por Mês × Semana</div>
+    <div id="heatmap"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Treemap — Custo por Área</div>
+    <div class="treemap" id="treemap"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Waterfall Chart — Variação de Orçamento</div>
+    <svg id="waterfall" width="100%" height="260"></svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bubble Chart — Projetos: Custo × Prazo × Tamanho equipe</div>
+    <svg id="bubble" width="100%" height="260"></svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step Area Chart — Fases por Projeto</div>
+    <svg id="steparea" width="100%" height="240"></svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Lollipop Chart — Desempenho Geral</div>
+    <svg id="lollipop" width="100%" height="280"></svg>
+  </div>
+
+</div>
+
+<!-- ═══════════ FLUXO ═══════════ -->
+<div id="sflow" class="section grid">
+
+  <div class="card" style="grid-column:1/-1">
+    <div class="card-title">Sankey Diagram — Fluxo de Projetos por Área → Status → Equipe</div>
+    <svg id="sankey" width="100%" height="320"></svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Chord Diagram — Interdependência entre Projetos</div>
+    <svg id="chord" width="100%" height="380"></svg>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Timeline / Gantt Simplificado</div>
+    <svg id="gantt" width="100%" height="320"></svg>
+  </div>
+
+</div>
+
+<script>
+/* ────────────────────────────────────────────────
+   HELPERS THREE.JS
+──────────────────────────────────────────────── */
+function makeScene(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  const W = canvas.parentElement.clientWidth - 40;
+  const H = 280;
+  canvas.width = W; canvas.height = H;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x0e1420, 1);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, W / H, 0.1, 1000);
+
+  // Simple orbit via mouse drag
+  let isDragging = false, prevX = 0, prevY = 0;
+  let rotX = 0.3, rotY = 0.4;
+  let zoom = 1;
+
+  canvas.addEventListener('mousedown', e => { isDragging = true; prevX = e.clientX; prevY = e.clientY; });
+  window.addEventListener('mouseup', () => isDragging = false);
+  window.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    rotY += (e.clientX - prevX) * 0.01;
+    rotX += (e.clientY - prevY) * 0.01;
+    prevX = e.clientX; prevY = e.clientY;
+  });
+  canvas.addEventListener('wheel', e => { zoom = Math.min(3, Math.max(0.4, zoom + e.deltaY * 0.001)); });
+
+  const pivot = new THREE.Group();
+  scene.add(pivot);
+
+  const ambient = new THREE.AmbientLight(0xffffff, 0.5);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+  dirLight.position.set(5, 10, 7);
+  scene.add(ambient, dirLight);
+
+  function setCamera(dist = 12) {
+    camera.position.set(
+      Math.sin(rotY) * Math.cos(rotX) * dist * zoom,
+      Math.sin(rotX) * dist * zoom,
+      Math.cos(rotY) * Math.cos(rotX) * dist * zoom
+    );
+    camera.lookAt(0, 0, 0);
+  }
+
+  return { renderer, scene, camera, pivot, setCamera,
+    get rotX(){ return rotX }, get rotY(){ return rotY },
+    set rotX(v){ rotX=v }, set rotY(v){ rotY=v }
+  };
+}
+
+const COLS_3D = [0x00e5ff, 0x00ff9d, 0xffe066, 0xff4d8d, 0xb06bff, 0xff8c42, 0x4fc3f7];
+
+/* ────────────────────────────────────────────────
+   1. 3D BAR CHART
+──────────────────────────────────────────────── */
+(function() {
+  const { renderer, scene, camera, pivot, setCamera, rotX, rotY } = makeScene('c3dbar');
+  const ctx = { rotX: 0.4, rotY: 0.3, auto: true };
+
+  const data = [42, 65, 55, 80, 72, 91, 60, 85, 70, 95, 78, 88];
+  const labels = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const maxV = Math.max(...data);
+
+  data.forEach((v, i) => {
+    const h = (v / maxV) * 5;
+    const geo = new THREE.BoxGeometry(0.6, h, 0.6);
+    const mat = new THREE.MeshPhongMaterial({ color: COLS_3D[i % COLS_3D.length], shininess: 80 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(i * 0.9 - (data.length - 1) * 0.45, h / 2, 0);
+    pivot.add(mesh);
+  });
+
+  // Grid floor
+  const grid = new THREE.GridHelper(12, 12, 0x1e2d42, 0x1e2d42);
+  grid.position.y = -0.01;
+  scene.add(grid);
+
+  let t = 0;
+  (function animate() {
+    requestAnimationFrame(animate);
+    t += 0.005;
+    ctx.rotY += 0.004;
+    pivot.rotation.y = ctx.rotY;
+    pivot.rotation.x = ctx.rotX;
+    setCamera(14);
+    renderer.render(scene, camera);
+  })();
+})();
+
+/* ────────────────────────────────────────────────
+   2. 3D SCATTER
+──────────────────────────────────────────────── */
+(function() {
+  const ctx = makeScene('c3dscatter');
+  ctx.rotX = 0.3; ctx.rotY = 0.2;
+
+  const pts = Array.from({length: 30}, () => ({
+    x: (Math.random() - .5) * 8,
+    y: (Math.random() - .5) * 8,
+    z: (Math.random() - .5) * 8,
+    r: 0.1 + Math.random() * 0.3,
+    c: COLS_3D[Math.floor(Math.random() * COLS_3D.length)]
+  }));
+
+  pts.forEach(p => {
+    const geo = new THREE.SphereGeometry(p.r, 16, 16);
+    const mat = new THREE.MeshPhongMaterial({ color: p.c, shininess: 120, transparent: true, opacity: 0.9 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(p.x, p.y, p.z);
+    ctx.pivot.add(m);
+  });
+
+  // Axes
+  const axMat = new THREE.LineBasicMaterial({ color: 0x1e2d42 });
+  [[8,0,0],[0,8,0],[0,0,8]].forEach(([x,y,z]) => {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0,0,0), new THREE.Vector3(x,y,z)
+    ]);
+    ctx.scene.add(new THREE.Line(geo, axMat));
+  });
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    ctx.rotY += 0.004;
+    ctx.pivot.rotation.y = ctx.rotY;
+    ctx.pivot.rotation.x = ctx.rotX;
+    ctx.setCamera(14);
+    ctx.renderer.render(ctx.scene, ctx.camera);
+  })();
+})();
+
+/* ────────────────────────────────────────────────
+   3. 3D SURFACE
+──────────────────────────────────────────────── */
+(function() {
+  const ctx = makeScene('c3dsurf');
+  ctx.rotX = 0.5; ctx.rotY = 0.4;
+
+  const N = 20;
+  const geo = new THREE.PlaneGeometry(8, 8, N - 1, N - 1);
+  geo.rotateX(-Math.PI / 2);
+
+  const pos = geo.attributes.position;
+  const colors = [];
+  const colorAttr = new THREE.BufferAttribute(new Float32Array(pos.count * 3), 3);
+
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), z = pos.getZ(i);
+    const h = Math.sin(x * 0.8) * Math.cos(z * 0.8) * 1.5
+            + Math.sin(x * 0.3 + 1) * 0.8
+            + Math.cos(z * 0.5) * 0.5;
+    pos.setY(i, h);
+    const t = (h + 2.8) / 5.6;
+    const c = new THREE.Color();
+    c.setHSL(0.65 - t * 0.65, 1, 0.3 + t * 0.4);
+    colorAttr.setXYZ(i, c.r, c.g, c.b);
+  }
+
+  geo.setAttribute('color', colorAttr);
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, shininess: 60, wireframe: false });
+  const mesh = new THREE.Mesh(geo, mat);
+  ctx.pivot.add(mesh);
+
+  // Wireframe overlay
+  const wireMat = new THREE.MeshBasicMaterial({ color: 0x1a2a3a, wireframe: true, transparent: true, opacity: 0.3 });
+  ctx.pivot.add(new THREE.Mesh(geo, wireMat));
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    ctx.rotY += 0.003;
+    ctx.pivot.rotation.y = ctx.rotY;
+    ctx.pivot.rotation.x = ctx.rotX;
+    ctx.setCamera(14);
+    ctx.renderer.render(ctx.scene, ctx.camera);
+  })();
+})();
+
+/* ────────────────────────────────────────────────
+   4. 3D DONUT
+──────────────────────────────────────────────── */
+(function() {
+  const ctx = makeScene('c3dpie');
+  ctx.rotX = 0.35;
+
+  const segs = [
+    { label: 'Infra',       value: 35, color: 0x00e5ff },
+    { label: 'Dev',         value: 28, color: 0x00ff9d },
+    { label: 'Marketing',   value: 18, color: 0xffe066 },
+    { label: 'RH',          value: 12, color: 0xff4d8d },
+    { label: 'Operações',   value: 7,  color: 0xb06bff },
+  ];
+  const total = segs.reduce((a, b) => a + b.value, 0);
+  let startAngle = 0;
+  const thickness = 0.8;
+
+  segs.forEach((s, idx) => {
+    const angle = (s.value / total) * Math.PI * 2;
+    const shape = new THREE.Shape();
+    const R = 3, r = 1.6;
+    const steps = 48;
+    for (let i = 0; i <= steps; i++) {
+      const a = startAngle + (i / steps) * angle;
+      const x = Math.cos(a) * R, y = Math.sin(a) * R;
+      i === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y);
+    }
+    for (let i = steps; i >= 0; i--) {
+      const a = startAngle + (i / steps) * angle;
+      shape.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    shape.closePath();
+
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: thickness, bevelEnabled: false });
+    const mat = new THREE.MeshPhongMaterial({ color: s.color, shininess: 100 });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.y = idx * 0.02;
+    ctx.pivot.add(mesh);
+    startAngle += angle;
+  });
+
+  // Legend
+  const leg = document.getElementById('pielegend');
+  segs.forEach(s => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML = `<div class="legend-dot" style="background:#${s.color.toString(16).padStart(6,'0')}"></div>${s.label}: ${s.value}%`;
+    leg.appendChild(item);
+  });
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    ctx.rotY += 0.006;
+    ctx.pivot.rotation.y = ctx.rotY;
+    ctx.pivot.rotation.x = ctx.rotX;
+    ctx.setCamera(10);
+    ctx.renderer.render(ctx.scene, ctx.camera);
+  })();
+})();
+
+/* ────────────────────────────────────────────────
+   5. 3D STACKED BARS
+──────────────────────────────────────────────── */
+(function() {
+  const ctx = makeScene('c3dstack');
+  ctx.rotX = 0.35; ctx.rotY = 0.5;
+
+  const quarters = ['Q1','Q2','Q3','Q4'];
+  const teams = ['Alpha','Beta','Gamma'];
+  const teamCols = [0x00e5ff, 0x00ff9d, 0xff4d8d];
+  const data = [
+    [3,4,2], [5,3,4], [4,5,3], [6,4,5]
+  ];
+
+  const grid = new THREE.GridHelper(10, 10, 0x1e2d42, 0x1e2d42);
+  ctx.scene.add(grid);
+
+  quarters.forEach((q, qi) => {
+    let yOff = 0;
+    teams.forEach((t, ti) => {
+      const h = data[qi][ti] * 0.4;
+      const geo = new THREE.BoxGeometry(0.7, h, 0.7);
+      const mat = new THREE.MeshPhongMaterial({ color: teamCols[ti], shininess: 80 });
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set(qi * 1.4 - 2.1, yOff + h / 2, 0);
+      yOff += h;
+      ctx.pivot.add(m);
+    });
+  });
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    ctx.rotY += 0.004;
+    ctx.pivot.rotation.y = ctx.rotY;
+    ctx.pivot.rotation.x = ctx.rotX;
+    ctx.setCamera(12);
+    ctx.renderer.render(ctx.scene, ctx.camera);
+  })();
+})();
+
+/* ────────────────────────────────────────────────
+   6. 3D GLOBE
+──────────────────────────────────────────────── */
+(function() {
+  const ctx = makeScene('c3dglobe');
+  ctx.rotX = 0.2; ctx.rotY = 0;
+
+  // Globe sphere
+  const geoSphere = new THREE.SphereGeometry(3.5, 48, 48);
+  const matSphere = new THREE.MeshPhongMaterial({
+    color: 0x0a1628, transparent: true, opacity: 0.95, shininess: 30,
+    wireframe: false
+  });
+  const sphere = new THREE.Mesh(geoSphere, matSphere);
+  ctx.pivot.add(sphere);
+
+  // Wireframe
+  const wGeo = new THREE.SphereGeometry(3.52, 18, 18);
+  const wMat = new THREE.MeshBasicMaterial({ color: 0x1e3a5a, wireframe: true, transparent: true, opacity: 0.4 });
+  ctx.pivot.add(new THREE.Mesh(wGeo, wMat));
+
+  // Points on globe
+  const pts = [
+    { lat: -14, lon: -51, v: 12, label: 'BR' },
+    { lat: 37,  lon: -95, v: 8,  label: 'US' },
+    { lat: 51,  lon: 10,  v: 6,  label: 'EU' },
+    { lat: 36,  lon: 138, v: 5,  label: 'JP' },
+    { lat: 20,  lon: 77,  v: 7,  label: 'IN' },
+    { lat: 35,  lon: 105, v: 9,  label: 'CN' },
+  ];
+
+  pts.forEach(p => {
+    const phi = (90 - p.lat) * Math.PI / 180;
+    const theta = (p.lon + 180) * Math.PI / 180;
+    const R = 3.6;
+    const x = -R * Math.sin(phi) * Math.cos(theta);
+    const y = R * Math.cos(phi);
+    const z = R * Math.sin(phi) * Math.sin(theta);
+
+    const r = 0.1 + p.v * 0.04;
+    const geo = new THREE.SphereGeometry(r, 12, 12);
+    const mat = new THREE.MeshPhongMaterial({ color: 0x00e5ff, shininess: 150, emissive: 0x003344 });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    ctx.pivot.add(m);
+  });
+
+  ctx.scene.add(new THREE.AmbientLight(0x112244, 2));
+  const dl = new THREE.DirectionalLight(0x00ccff, 1.5);
+  dl.position.set(10, 10, 10);
+  ctx.scene.add(dl);
+
+  (function animate() {
+    requestAnimationFrame(animate);
+    ctx.rotY += 0.005;
+    ctx.pivot.rotation.y = ctx.rotY;
+    ctx.pivot.rotation.x = ctx.rotX;
+    ctx.setCamera(10);
+    ctx.renderer.render(ctx.scene, ctx.camera);
+  })();
+})();
+
+/* ════════════════════════════════════════════
+   2D AVANÇADOS
+════════════════════════════════════════════ */
+
+/* HEATMAP */
+(function() {
+  const el = document.getElementById('heatmap');
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const data = months.map(() => Array.from({length:4},()=>Math.floor(Math.random()*10)));
+  const max = 9;
+  const grid = document.createElement('div');
+  grid.className = 'heatmap-grid';
+  months.forEach((m,mi) => {
+    data[mi].forEach((v,wi) => {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+      const t = v / max;
+      const h = Math.round(200 - t * 160);
+      const l = Math.round(15 + t * 45);
+      cell.style.cssText = `background:hsl(${h},80%,${l}%);`;
+      cell.title = `${m} S${wi+1}: ${v} projetos`;
+      grid.appendChild(cell);
+    });
+  });
+  el.appendChild(grid);
+  const labs = document.createElement('div');
+  labs.className = 'heatmap-labels';
+  months.forEach(m => {
+    const l = document.createElement('div');
+    l.className = 'heatmap-label';
+    l.textContent = m;
+    labs.appendChild(l);
+  });
+  el.appendChild(labs);
+  const sub = document.createElement('div');
+  sub.style.cssText = 'font-size:.5rem;color:var(--muted);margin-top:.5rem';
+  sub.textContent = 'Linhas = semanas, Colunas = meses · Cor = intensidade de entregas';
+  el.appendChild(sub);
+})();
+
+/* TREEMAP */
+(function() {
+  const el = document.getElementById('treemap');
+  const items = [
+    { label:'Tecnologia', value:40, color:'#00e5ff' },
+    { label:'Marketing',  value:22, color:'#ff4d8d' },
+    { label:'RH',         value:15, color:'#00ff9d' },
+    { label:'Operações',  value:13, color:'#ffe066' },
+    { label:'Jurídico',   value:6,  color:'#b06bff' },
+    { label:'Outros',     value:4,  color:'#ff8c42' },
+  ];
+  const total = items.reduce((a,b)=>a+b.value,0);
+  let x = 0;
+  items.forEach(item => {
+    const w = (item.value/total)*100;
+    const cell = document.createElement('div');
+    cell.className = 'treemap-cell';
+    cell.style.cssText = `left:${x}%;top:0;width:${w}%;height:100%;background:${item.color}22;border-color:${item.color}44`;
+    cell.innerHTML = `<span>${item.label}</span><small>${item.value}%</small>`;
+    cell.style.borderLeft = `3px solid ${item.color}`;
+    el.appendChild(cell);
+    x += w;
+  });
+})();
+
+/* WATERFALL */
+(function() {
+  const svg = document.getElementById('waterfall');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 260;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const data = [
+    { label:'Orçamento', value:500, type:'start' },
+    { label:'+Aporte',   value:80,  type:'pos' },
+    { label:'-Infraest.', value:-120, type:'neg' },
+    { label:'+Receita',  value:95,  type:'pos' },
+    { label:'-Pessoal',  value:-140, type:'neg' },
+    { label:'-Marketing', value:-60, type:'neg' },
+    { label:'+Bônus',    value:45,  type:'pos' },
+    { label:'Final',     value:0,   type:'end' },
+  ];
+
+  let running = 0;
+  const bars = data.map((d,i) => {
+    if (d.type === 'start') { running = d.value; return { ...d, from:0, to:d.value }; }
+    if (d.type === 'end') { return { ...d, from:0, to:running }; }
+    const from = running;
+    running += d.value;
+    return { ...d, from, to:running };
+  });
+
+  const maxV = 600, minV = 0;
+  const bw = (W - 60) / bars.length - 8;
+  const yScale = v => H - 30 - ((v - minV) / (maxV - minV)) * (H - 50);
+
+  // Grid
+  [0,100,200,300,400,500,600].forEach(v => {
+    const y = yScale(v);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',40); line.setAttribute('x2',W);
+    line.setAttribute('y1',y); line.setAttribute('y2',y);
+    line.setAttribute('stroke','#1e2d42'); line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',2); t.setAttribute('y',y+4);
+    t.setAttribute('fill','#4a6080'); t.setAttribute('font-size','8');
+    t.textContent = v;
+    svg.appendChild(t);
+  });
+
+  bars.forEach((b, i) => {
+    const x = 40 + i * ((W - 40) / bars.length);
+    const y1 = yScale(Math.max(b.from, b.to));
+    const y2 = yScale(Math.min(b.from, b.to));
+    const barH = Math.max(2, y2 - y1);
+    const col = b.type==='start'?'#00e5ff': b.type==='end'?'#b06bff': b.value>0?'#00ff9d':'#ff4d8d';
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x', x); rect.setAttribute('y', y1);
+    rect.setAttribute('width', bw); rect.setAttribute('height', barH);
+    rect.setAttribute('fill', col); rect.setAttribute('rx','3');
+    rect.setAttribute('class','wf-bar');
+    svg.appendChild(rect);
+
+    // Connector
+    if (i < bars.length - 1) {
+      const nx = x + bw + 8;
+      const cy = yScale(b.to);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1',x+bw); line.setAttribute('x2',nx);
+      line.setAttribute('y1',cy); line.setAttribute('y2',cy);
+      line.setAttribute('stroke','#1e2d42'); line.setAttribute('stroke-dasharray','3,2');
+      svg.appendChild(line);
+    }
+
+    const lab = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lab.setAttribute('x', x + bw/2); lab.setAttribute('y', H - 10);
+    lab.setAttribute('text-anchor','middle'); lab.setAttribute('fill','#4a6080');
+    lab.setAttribute('font-size','7.5');
+    lab.textContent = b.label.replace('+','').replace('-','');
+    svg.appendChild(lab);
+
+    const val = document.createElementNS('http://www.w3.org/2000/svg','text');
+    val.setAttribute('x', x + bw/2); val.setAttribute('y', y1 - 4);
+    val.setAttribute('text-anchor','middle'); val.setAttribute('fill', col);
+    val.setAttribute('font-size','8'); val.setAttribute('font-weight','700');
+    val.textContent = b.value !== 0 ? (b.value > 0 ? '+' : '') + b.value : b.to;
+    svg.appendChild(val);
+  });
+})();
+
+/* BUBBLE CHART */
+(function() {
+  const svg = document.getElementById('bubble');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 260;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const data = [
+    { name:'Alpha',   x:120, y:8.5, r:40, c:'#00e5ff' },
+    { name:'Beta',    x:200, y:6.2, r:28, c:'#00ff9d' },
+    { name:'Gamma',   x:80,  y:7.0, r:20, c:'#ffe066' },
+    { name:'Delta',   x:300, y:9.1, r:50, c:'#ff4d8d' },
+    { name:'Epsilon', x:380, y:5.5, r:34, c:'#b06bff' },
+    { name:'Zeta',    x:240, y:7.8, r:22, c:'#ff8c42' },
+    { name:'Eta',     x:150, y:9.5, r:16, c:'#4fc3f7' },
+  ];
+
+  // Axes
+  [[40,H-30,W,H-30],[40,10,40,H-30]].forEach(([x1,y1,x2,y2])=>{
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x1);l.setAttribute('y1',y1);l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+    l.setAttribute('stroke','#1e2d42');l.setAttribute('stroke-width','1');
+    svg.appendChild(l);
+  });
+  const xt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  xt.setAttribute('x',W/2);xt.setAttribute('y',H-2);xt.setAttribute('text-anchor','middle');
+  xt.setAttribute('fill','#4a6080');xt.setAttribute('font-size','8');xt.textContent='Custo (R$k) →';
+  svg.appendChild(xt);
+
+  data.forEach(d => {
+    const cx = 50 + (d.x / 420) * (W - 80);
+    const cy = H - 30 - ((d.y - 4) / 7) * (H - 60);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',cx);circle.setAttribute('cy',cy);
+    circle.setAttribute('r',d.r/3);circle.setAttribute('fill',d.c+'33');
+    circle.setAttribute('stroke',d.c);circle.setAttribute('stroke-width','1.5');
+    circle.setAttribute('class','bubble');
+    circle.setAttribute('data-name',d.name);
+    svg.appendChild(circle);
+
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',cx);t.setAttribute('y',cy+3);
+    t.setAttribute('text-anchor','middle');t.setAttribute('fill',d.c);
+    t.setAttribute('font-size','7');t.setAttribute('font-weight','700');
+    t.textContent=d.name;
+    svg.appendChild(t);
+  });
+})();
+
+/* STEP AREA */
+(function() {
+  const svg = document.getElementById('steparea');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 240;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const phases = ['Planej.','Início','Dev.','Teste','Deploy','Revisão','Concluído'];
+  const series = [
+    { label:'Alpha', data:[1,2,4,5,6,6,7], color:'#00e5ff' },
+    { label:'Beta',  data:[0,1,2,3,4,5,6], color:'#ff4d8d' },
+    { label:'Gamma', data:[1,1,3,3,5,6,7], color:'#00ff9d' },
+  ];
+  const maxV = 7;
+  const xStep = (W - 60) / (phases.length - 1);
+  const yScale = v => H - 30 - (v / maxV) * (H - 50);
+
+  series.forEach(s => {
+    let path = '';
+    let areaPath = '';
+    s.data.forEach((v, i) => {
+      const x = 40 + i * xStep;
+      const y = yScale(v);
+      if (i === 0) { path += `M${x},${y}`; areaPath += `M${x},${H-30} L${x},${y}`; }
+      else {
+        const px = 40 + (i-1) * xStep;
+        path += ` L${x},${yScale(s.data[i-1])} L${x},${y}`;
+        areaPath += ` L${x},${yScale(s.data[i-1])} L${x},${y}`;
+      }
+    });
+    const last = 40 + (phases.length-1)*xStep;
+    areaPath += ` L${last},${H-30} Z`;
+
+    const aEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    aEl.setAttribute('d',areaPath);aEl.setAttribute('fill',s.color+'22');
+    svg.appendChild(aEl);
+
+    const pEl = document.createElementNS('http://www.w3.org/2000/svg','path');
+    pEl.setAttribute('d',path);pEl.setAttribute('fill','none');
+    pEl.setAttribute('stroke',s.color);pEl.setAttribute('stroke-width','2');
+    svg.appendChild(pEl);
+  });
+
+  // Phase labels
+  phases.forEach((p,i) => {
+    const x = 40 + i * xStep;
+    const l = document.createElementNS('http://www.w3.org/2000/svg','text');
+    l.setAttribute('x',x);l.setAttribute('y',H-10);
+    l.setAttribute('text-anchor','middle');l.setAttribute('fill','#4a6080');l.setAttribute('font-size','8');
+    l.textContent=p;
+    svg.appendChild(l);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x);line.setAttribute('x2',x);
+    line.setAttribute('y1',10);line.setAttribute('y2',H-30);
+    line.setAttribute('stroke','#1e2d42');line.setAttribute('stroke-dasharray','3,3');
+    svg.insertBefore(line, svg.firstChild);
+  });
+})();
+
+/* LOLLIPOP */
+(function() {
+  const svg = document.getElementById('lollipop');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 280;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  const data = [
+    { label:'Alpha',   value:88, color:'#00e5ff' },
+    { label:'Beta',    value:72, color:'#ff4d8d' },
+    { label:'Gamma',   value:95, color:'#00ff9d' },
+    { label:'Delta',   value:64, color:'#ffe066' },
+    { label:'Epsilon', value:81, color:'#b06bff' },
+    { label:'Zeta',    value:57, color:'#ff8c42' },
+    { label:'Eta',     value:90, color:'#4fc3f7' },
+  ].sort((a,b)=>b.value-a.value);
+
+  const rowH = (H - 40) / data.length;
+  const xMax = W - 80;
+
+  data.forEach((d, i) => {
+    const y = 20 + i * rowH + rowH / 2;
+    const barW = (d.value / 100) * (xMax - 60);
+
+    // Stem
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',80);line.setAttribute('y1',y);
+    line.setAttribute('x2',80+barW);line.setAttribute('y2',y);
+    line.setAttribute('stroke',d.color+'66');line.setAttribute('stroke-width','1.5');
+    svg.appendChild(line);
+
+    // Circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circle.setAttribute('cx',80+barW);circle.setAttribute('cy',y);
+    circle.setAttribute('r','6');circle.setAttribute('fill',d.color);
+    svg.appendChild(circle);
+
+    // Label
+    const lt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lt.setAttribute('x',75);lt.setAttribute('y',y+4);
+    lt.setAttribute('text-anchor','end');lt.setAttribute('fill','#dde6f0');lt.setAttribute('font-size','9');
+    lt.textContent=d.label;
+    svg.appendChild(lt);
+
+    // Value
+    const vt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    vt.setAttribute('x',80+barW+10);vt.setAttribute('y',y+4);
+    vt.setAttribute('fill',d.color);vt.setAttribute('font-size','9');vt.setAttribute('font-weight','700');
+    vt.textContent=d.value;
+    svg.appendChild(vt);
+  });
+})();
+
+/* ════════════════════════════════════════════
+   SANKEY
+════════════════════════════════════════════ */
+(function() {
+  const svg = document.getElementById('sankey');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 320;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  const nodes = {
+    areas: [{id:'TI',y:20,h:80,c:'#00e5ff'},{id:'Ops',y:110,h:60,c:'#ff4d8d'},{id:'Mkt',y:180,h:50,c:'#ffe066'},{id:'RH',y:240,h:40,c:'#b06bff'}],
+    status: [{id:'Concluído',y:20,h:60,c:'#00ff9d'},{id:'Em Exec.',y:90,h:80,c:'#00e5ff'},{id:'Planej.',y:180,h:60,c:'#ffe066'},{id:'Atrasado',y:250,h:40,c:'#ff4d8d'}],
+    teams: [{id:'Team A',y:20,h:70,c:'#4fc3f7'},{id:'Team B',y:100,h:90,c:'#ff8c42'},{id:'Team C',y:200,h:80,c:'#b06bff'}],
+  };
+
+  const col1=40, col2=W/2-20, col3=W-60, nodeW=18;
+
+  function drawNode(x, node, label) {
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x);rect.setAttribute('y',node.y);
+    rect.setAttribute('width',nodeW);rect.setAttribute('height',node.h);
+    rect.setAttribute('fill',node.c);rect.setAttribute('rx','3');
+    svg.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    const tx = x < W/3 ? x - 4 : x + nodeW + 4;
+    t.setAttribute('x',tx);t.setAttribute('y',node.y + node.h/2 + 4);
+    t.setAttribute('text-anchor', x < W/3 ? 'end' : 'start');
+    t.setAttribute('fill','#dde6f0');t.setAttribute('font-size','9');
+    t.textContent = node.id;
+    svg.appendChild(t);
+  }
+
+  function drawFlow(x1, y1, h1, x2, y2, h2, color) {
+    const mx = (x1+x2)/2;
+    const path = `M${x1+nodeW},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2} L${x2},${y2+h2} C${mx},${y2+h2} ${mx},${y1+h1} ${x1+nodeW},${y1+h1} Z`;
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',path);p.setAttribute('fill',color+'33');
+    p.setAttribute('stroke',color+'66');p.setAttribute('stroke-width','0.5');
+    p.setAttribute('class','sankey-flow');
+    svg.insertBefore(p, svg.firstChild);
+  }
+
+  nodes.areas.forEach(n => drawNode(col1, n));
+  nodes.status.forEach(n => drawNode(col2, n));
+  nodes.teams.forEach(n => drawNode(col3, n));
+
+  // Area → Status flows (approximate)
+  const asCon = [[0,0,40,30],[0,1,30,40],[1,1,30,40],[1,2,20,30],[2,1,10,10],[2,2,25,30],[3,3,30,25],[3,1,10,10]];
+  let aOff = [0,0,0,0], sOff=[0,0,0,0];
+  asCon.forEach(([ai,si,ah,sh]) => {
+    const a = nodes.areas[ai], s = nodes.status[si];
+    drawFlow(col1, a.y+aOff[ai], ah, col2, s.y+sOff[si], sh, a.c);
+    aOff[ai]+=ah; sOff[si]+=sh;
+  });
+
+  // Status → Team flows
+  const stCon = [[0,0,30,40],[0,1,20,25],[1,1,40,50],[1,2,30,35],[2,0,25,20],[2,2,20,28],[3,1,30,20],[3,2,8,12]];
+  let ssOff=[0,0,0,0], tOff=[0,0,0];
+  stCon.forEach(([si,ti,sh,th]) => {
+    const s = nodes.status[si], t = nodes.teams[ti];
+    drawFlow(col2, s.y+ssOff[si], sh, col3, t.y+tOff[ti], th, s.c);
+    ssOff[si]+=sh; tOff[ti]+=th;
+  });
+})();
+
+/* ════════════════════════════════════════════
+   CHORD DIAGRAM
+════════════════════════════════════════════ */
+(function() {
+  const svg = document.getElementById('chord');
+  const SIZE = Math.min(svg.parentElement.clientWidth - 40, 360);
+  svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+  const cx = SIZE/2, cy = SIZE/2, R = SIZE/2 - 30, r = R - 22;
+
+  const projects = [
+    {label:'Alpha',  color:'#00e5ff'},
+    {label:'Beta',   color:'#ff4d8d'},
+    {label:'Gamma',  color:'#00ff9d'},
+    {label:'Delta',  color:'#ffe066'},
+    {label:'Epsilon',color:'#b06bff'},
+    {label:'Zeta',   color:'#ff8c42'},
+  ];
+
+  const links = [
+    [0,1,0.3],[0,2,0.5],[1,3,0.4],[2,4,0.6],[3,5,0.3],[4,0,0.4],[1,5,0.2],[2,3,0.35],[4,5,0.45]
+  ];
+
+  const n = projects.length;
+  const gap = 0.04;
+  const segAngle = (2*Math.PI - gap*n) / n;
+
+  function pt(angle, radius) {
+    return [cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius];
+  }
+
+  // Draw arcs
+  projects.forEach((p, i) => {
+    const startA = i * (segAngle + gap) - Math.PI/2;
+    const endA = startA + segAngle;
+
+    const [x1,y1] = pt(startA, R);
+    const [x2,y2] = pt(endA, R);
+    const laf = segAngle > Math.PI ? 1 : 0;
+
+    const d = `M ${x1} ${y1} A ${R} ${R} 0 ${laf} 1 ${x2} ${y2}`;
+    const arc = document.createElementNS('http://www.w3.org/2000/svg','path');
+    arc.setAttribute('d',d);arc.setAttribute('fill','none');
+    arc.setAttribute('stroke',p.color);arc.setAttribute('stroke-width','14');arc.setAttribute('opacity','.8');
+    svg.appendChild(arc);
+
+    // Label
+    const midA = startA + segAngle/2;
+    const [lx,ly] = pt(midA, R+16);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',lx);t.setAttribute('y',ly+3);
+    t.setAttribute('text-anchor','middle');t.setAttribute('fill',p.color);t.setAttribute('font-size','9');
+    t.textContent=p.label;
+    svg.appendChild(t);
+  });
+
+  // Draw chords
+  links.forEach(([i, j, w]) => {
+    const midI = i*(segAngle+gap) - Math.PI/2 + segAngle/2;
+    const midJ = j*(segAngle+gap) - Math.PI/2 + segAngle/2;
+    const [x1,y1] = pt(midI, r);
+    const [x2,y2] = pt(midJ, r);
+    const path = `M${x1},${y1} Q${cx},${cy} ${x2},${y2}`;
+    const chord = document.createElementNS('http://www.w3.org/2000/svg','path');
+    chord.setAttribute('d',path);chord.setAttribute('fill','none');
+    chord.setAttribute('stroke',projects[i].color);chord.setAttribute('stroke-width',Math.round(w*18));
+    chord.setAttribute('opacity','0.35');chord.setAttribute('class','sankey-flow');
+    svg.insertBefore(chord, svg.firstChild);
+  });
+})();
+
+/* ════════════════════════════════════════════
+   GANTT
+════════════════════════════════════════════ */
+(function() {
+  const svg = document.getElementById('gantt');
+  const W = svg.parentElement.clientWidth - 40;
+  const H = 320;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const projects = [
+    {name:'Alpha',   start:0, end:4,  color:'#00e5ff', progress:100},
+    {name:'Beta',    start:1, end:6,  color:'#ff4d8d', progress:80},
+    {name:'Gamma',   start:2, end:8,  color:'#00ff9d', progress:60},
+    {name:'Delta',   start:3, end:9,  color:'#ffe066', progress:40},
+    {name:'Epsilon', start:5, end:11, color:'#b06bff', progress:20},
+    {name:'Zeta',    start:7, end:12, color:'#ff8c42', progress:10},
+  ];
+
+  const lw = 70;
+  const chartW = W - lw - 10;
+  const mW = chartW / 12;
+  const rowH = (H - 40) / projects.length;
+
+  // Month headers
+  months.forEach((m, i) => {
+    const x = lw + i * mW;
+    const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    rect.setAttribute('x',x);rect.setAttribute('y',0);
+    rect.setAttribute('width',mW);rect.setAttribute('height',20);
+    rect.setAttribute('fill', i%2===0 ? '#0e1420' : '#111822');
+    svg.appendChild(rect);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',x+mW/2);t.setAttribute('y',13);
+    t.setAttribute('text-anchor','middle');t.setAttribute('fill','#4a6080');t.setAttribute('font-size','8');
+    t.textContent=m;
+    svg.appendChild(t);
+    // Vertical grid
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x);line.setAttribute('x2',x);
+    line.setAttribute('y1',20);line.setAttribute('y2',H);
+    line.setAttribute('stroke','#1e2d42');line.setAttribute('stroke-width','0.5');
+    svg.appendChild(line);
+  });
+
+  // "Today" marker (month 7)
+  const todayX = lw + 7 * mW;
+  const tl = document.createElementNS('http://www.w3.org/2000/svg','line');
+  tl.setAttribute('x1',todayX);tl.setAttribute('x2',todayX);
+  tl.setAttribute('y1',20);tl.setAttribute('y2',H);
+  tl.setAttribute('stroke','#ff4d8d');tl.setAttribute('stroke-width','1.5');tl.setAttribute('stroke-dasharray','4,3');
+  svg.appendChild(tl);
+  const tt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  tt.setAttribute('x',todayX+3);tt.setAttribute('y',32);
+  tt.setAttribute('fill','#ff4d8d');tt.setAttribute('font-size','7');
+  tt.textContent='hoje';
+  svg.appendChild(tt);
+
+  projects.forEach((p, i) => {
+    const y = 25 + i * rowH;
+    // Label
+    const lt = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lt.setAttribute('x',lw-4);lt.setAttribute('y',y+rowH/2+4);
+    lt.setAttribute('text-anchor','end');lt.setAttribute('fill','#dde6f0');lt.setAttribute('font-size','9');
+    lt.textContent=p.name;
+    svg.appendChild(lt);
+
+    // Background bar
+    const bx = lw + p.start * mW;
+    const bw = (p.end - p.start) * mW;
+    const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    bg.setAttribute('x',bx);bg.setAttribute('y',y+4);
+    bg.setAttribute('width',bw);bg.setAttribute('height',rowH-12);
+    bg.setAttribute('fill',p.color+'1a');bg.setAttribute('stroke',p.color+'55');bg.setAttribute('stroke-width','1');
+    bg.setAttribute('rx','4');
+    svg.appendChild(bg);
+
+    // Progress bar
+    const pw = bw * (p.progress/100);
+    const pb = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    pb.setAttribute('x',bx);pb.setAttribute('y',y+4);
+    pb.setAttribute('width',pw);pb.setAttribute('height',rowH-12);
+    pb.setAttribute('fill',p.color+'88');pb.setAttribute('rx','4');
+    svg.appendChild(pb);
+
+    // % text
+    const pt2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+    pt2.setAttribute('x',bx+bw/2);pt2.setAttribute('y',y+rowH/2+4);
+    pt2.setAttribute('text-anchor','middle');pt2.setAttribute('fill',p.color);
+    pt2.setAttribute('font-size','8');pt2.setAttribute('font-weight','700');
+    pt2.textContent=`${p.progress}%`;
+    svg.appendChild(pt2);
+  });
+})();
+
+/* TABS */
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
