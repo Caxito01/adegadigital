@@ -139,14 +139,30 @@ async function searchWines(query){
   // Vivino exige pelo menos um filtro além do termo de busca
   ["1","2","3","4","5"].forEach(id => params.append("wine_type_ids[]", id));
   const target = `https://www.vivino.com/api/explore/explore?${params.toString()}`;
-  const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(target)}`, {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(5000)
-  });
 
-  if(!res.ok){
-    const t = await res.text();
-    throw new Error(`HTTP ${res.status}: ${t.slice(0,300)}`);
+  const proxies = [
+    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+    url => `https://r.jina.ai/http://` + url.replace(/^https?:\/\//, "")
+  ];
+
+  let res = null;
+  let lastErr = "";
+  for (const buildUrl of proxies) {
+    try {
+      res = await fetch(buildUrl(target), {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(6000)
+      });
+      if (res.ok) break;
+      lastErr = await res.text();
+    } catch (err) {
+      lastErr = err?.message || String(err);
+    }
+  }
+
+  if (!res || !res.ok) {
+    throw new Error(`HTTP ${res?.status || "---"}: ${String(lastErr).slice(0,300)}`);
   }
 
   const data = await res.json();
