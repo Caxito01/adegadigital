@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Adega Digital — Wine Explorer</title>
-<meta name="description" content="Busque vinhos do mundo com inteligência artificial."/>
+<meta name="description" content="Busque vinhos do mundo com dados reais de API."/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -82,8 +82,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:.9rem 2rem;display:f
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 .fade-up{animation:fadeUp .4s ease-out forwards;opacity:0}
 footer{border-top:1px solid var(--border);padding:3rem 2rem;text-align:center}
-/* Grok badge */
-.grok-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;background:rgba(30,50,80,.3);border:1px solid rgba(60,100,160,.3);color:#7ab}
 @media(max-width:680px){
   .hero-title{font-size:3rem}
   .nav-links .nav-link:not(:last-child){display:none}
@@ -130,33 +128,12 @@ function FlavorBar({label,value,color}){
   );
 }
 
-/* ── GROK API ── */
-async function searchWines(query, apiKey){
-  const res = await fetch("https://api.x.ai/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: "grok-4-latest",
-      max_tokens: 2000,
-      messages: [
-        {
-          role: "system",
-          content: "Você é um sommelier especialista mundial. Responda APENAS com JSON puro, sem markdown, sem explicações."
-        },
-        {
-          role: "user",
-          content: `Busca de vinho: "${query}"
-
-Retorne um objeto JSON com exatamente esta estrutura:
-{"vinhos":[{"nome":"","produtor":"","pais":"","regiao":"","ano":2019,"tipo":"Tinto","uvas":[""],"pontuacao":92,"preco":"R$ 180","alcool":"14%","temperatura":"16-18°C","decantacao":"1h","guarda":"10-15 anos","descricao":"Frase curta elegante","notas":"Notas detalhadas em 2 frases","perfil":{"acidez":68,"taninos":88,"corpo":92,"frutado":76},"harmonizacao":[""]}]}
-
-Retorne 5 vinhos reais relevantes. Tipos válidos: Tinto, Branco, Rosé, Espumante, Sobremesa. Pontuações 82-97. Preços em BRL realistas.`
-        }
-      ]
-    })
+/* ── VIVINO API (BUSCA DIRETA) ── */
+async function searchWines(query){
+  const target = `https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(query)}&language=pt&currency_code=BRL&per_page=12`;
+  const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(target)}`, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(5000)
   });
 
   if(!res.ok){
@@ -165,38 +142,50 @@ Retorne 5 vinhos reais relevantes. Tipos válidos: Tinto, Branco, Rosé, Espuman
   }
 
   const data = await res.json();
-  const raw = data?.choices?.[0]?.message?.content || "";
+  const matches = data?.explore_vintage?.matches || [];
+  if(matches.length === 0) return [];
 
-  // Parse robusto
-  try { return JSON.parse(raw).vinhos; } catch {}
-  const m = raw.match(/\{[\s\S]*"vinhos"[\s\S]*\}/);
-  if(m) try { return JSON.parse(m[0]).vinhos; } catch {}
-  const a = raw.match(/\[[\s\S]*\]/);
-  if(a) try { return JSON.parse(a[0]); } catch {}
-  throw new Error("Não foi possível parsear: " + raw.slice(0,200));
-}
+  return matches.map((match)=>{
+    const v = match.vintage || {};
+    const w = v.wine || {};
+    const stats = v.statistics || {};
+    const region = w.region || {};
+    const country = region.country || {};
+    const grapes = (w.grapes || []).map(g=>g.name).filter(Boolean);
+    const style = w.style?.name || "";
+    const price = match.price?.amount ? `${match.price.currency || "R$"} ${Number(match.price.amount).toFixed(2)}` : null;
 
-async function enrichVivino(nome){
-  try{
-    const t=`https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(nome)}&language=pt&currency_code=BRL&per_page=1`;
-    const r=await fetch(`https://corsproxy.io/?url=${encodeURIComponent(t)}`,
-      {headers:{Accept:"application/json"},signal:AbortSignal.timeout(4000)});
-    if(!r.ok)return null;
-    const j=await r.json();
-    const m=j?.explore_vintage?.matches?.[0];
-    if(!m)return null;
-    const v=m.vintage||{},w=v.wine||{},s=v.statistics||{},st=w.taste?.structure||{};
-    return{
-      rating:s.ratings_average,count:s.ratings_count,
-      img:v.image?.location?`https:${v.image.location}`:null,
-      url:v.id?`https://www.vivino.com/w/${v.id}`:null,
-      preco:m.price?.amount?`${m.price.currency||"R$"} ${Number(m.price.amount).toFixed(2)}`:null,
-      perfil:{...(st.acidity?{acidez:Math.round(st.acidity*20)}:{}),
-              ...(st.tannin?{taninos:Math.round(st.tannin*20)}:{}),
-              ...(st.intensity?{corpo:Math.round(st.intensity*20)}:{})}
+    return {
+      nome: v.name || w.name || "Vinho",
+      produtor: w.winery?.name || "",
+      pais: country.name || "",
+      regiao: region.name || "",
+      ano: v.year || w.vintage || "",
+      tipo: w.type || "Tinto",
+      uvas: grapes.length ? grapes : [style || ""].filter(Boolean),
+      pontuacao: stats.ratings_average ? Math.round(stats.ratings_average * 10) : 88,
+      preco: price || "",
+      alcool: w.alcohol || "",
+      temperatura: "",
+      decantacao: "",
+      guarda: "",
+      descricao: w.story || w.tasting_notes || "",
+      notas: w.tasting_notes || w.story || "",
+      perfil: {},
+      harmonizacao: [],
+      _viv: {
+        rating: stats.ratings_average,
+        count: stats.ratings_count,
+        img: v.image?.location ? `https:${v.image.location}` : null,
+        url: v.id ? `https://www.vivino.com/w/${v.id}` : null,
+        preco: price || null,
+        perfil: {}
+      }
     };
-  }catch{return null}
+  }).filter(w=>w.nome);
 }
+
+const enrichVivino = null;
 
 /* ── WINE CARD ── */
 function WineCard({wine,index,selected,onSelect}){
@@ -296,7 +285,7 @@ function DetailPanel({wine,onClose}){
 }
 
 /* ── EXPLORER ── */
-function Explorer({apiKey}){
+function Explorer(){
   const [query,setQuery]=useState("");
   const [wines,setWines]=useState([]);
   const [selected,setSelected]=useState(null);
@@ -309,18 +298,15 @@ function Explorer({apiKey}){
   async function doSearch(q){
     if(!q.trim()||state==="loading")return;
     setState("loading");setErrMsg("");setWines([]);setSelected(null);
-    let list=[];
     try{
-      list=await searchWines(q,apiKey);
+      const list=await searchWines(q);
       if(!Array.isArray(list)||!list.length)throw new Error("Sem resultados");
-      setWines(list.map(w=>({...w,_viv:null})));
-      setState("enriching");
-    }catch(e){setErrMsg(e.message);setState("error");return}
-    const enriched=await Promise.all(list.map(async w=>({...w,_viv:await enrichVivino(w.nome)})));
-    setWines(enriched);setState("done");
+      setWines(list);
+      setState("done");
+    }catch(e){setErrMsg(e.message);setState("error")}
   }
 
-  const busy=state==="loading"||state==="enriching";
+  const busy=state==="loading";
 
   return h("div",null,
     h("div",{className:"search-wrap"},
@@ -334,16 +320,16 @@ function Explorer({apiKey}){
     wines.length===0&&state!=="loading"&&h("div",{style:{display:"flex",flexWrap:"wrap",gap:".45rem",marginBottom:"2rem"}},
       ...chips.map(s=>h("button",{key:s,className:"chip",onClick:()=>{setQuery(s);doSearch(s)}},s))
     ),
-    state==="loading"&&h("div",{style:{textAlign:"center",padding:"3rem 0"}},
+  state==="loading"&&h("div",{style:{textAlign:"center",padding:"3rem 0"}},
       h("div",{style:{display:"flex",justifyContent:"center",gap:6,marginBottom:"1rem"}},
         ...[0,1,2,3,4].map(i=>h("div",{key:i,style:{width:5,height:22,borderRadius:3,
           background:i%2?"var(--wine2)":"var(--wine)",transformOrigin:"bottom",
           animation:`wineRise 1.2s ease-in-out ${i*.15}s infinite`}}))
       ),
-      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",fontSize:".88rem"}},"Consultando o sommelier...")
+      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",fontSize:".88rem"}},"Buscando vinhos na API...")
     ),
     state==="error"&&h("div",{style:{textAlign:"center",padding:"2rem 0"}},
-      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",marginBottom:"1rem"}},"Verifique sua API key e tente novamente."),
+      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",marginBottom:"1rem"}},"Não foi possível buscar na API. Tente novamente."),
       errMsg&&h("pre",{style:{fontSize:".52rem",color:"#f66",background:"var(--card)",
         border:"1px solid var(--border)",borderRadius:8,padding:".7rem",maxWidth:500,margin:"0 auto",
         textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}},errMsg)
@@ -377,18 +363,6 @@ function Explorer({apiKey}){
 
 /* ── APP ── */
 function App(){
-  const [apiKey,setApiKey]=useState(()=>localStorage.getItem("adega_grok_key")||"");
-  const [keyInput,setKeyInput]=useState("");
-  const [keySet,setKeySet]=useState(()=>!!localStorage.getItem("adega_grok_key"));
-
-  function saveKey(){
-    const k=keyInput.trim();
-    if(!k.startsWith("xai-")){alert("API key inválida. Deve começar com xai-");return}
-    localStorage.setItem("adega_grok_key",k);setApiKey(k);setKeySet(true);
-  }
-  function clearKey(){
-    localStorage.removeItem("adega_grok_key");setApiKey("");setKeyInput("");setKeySet(false);
-  }
   function scrollToExplorer(e){
     e.preventDefault();
     document.getElementById("explorer-section")?.scrollIntoView({behavior:"smooth"});
@@ -401,10 +375,7 @@ function App(){
       h("div",{className:"nav-links"},
         h("a",{className:"nav-link",href:"#features-section"},"Recursos"),
         h("button",{className:"nav-link",onClick:scrollToExplorer},"Explorar"),
-        h("a",{className:"nav-link",href:"https://github.com/Caxito01/adegadigital",target:"_blank"},"GitHub"),
-        keySet&&h("button",{onClick:clearKey,style:{fontSize:".5rem",color:"var(--muted)",background:"none",
-          border:"1px solid var(--border2)",borderRadius:100,padding:"4px 10px",cursor:"pointer",
-          fontFamily:"'DM Mono',monospace"}},"key ✕")
+        h("a",{className:"nav-link",href:"https://github.com/Caxito01/adegadigital",target:"_blank"},"GitHub")
       )
     ),
 
@@ -415,7 +386,7 @@ function App(){
       h("p",{style:{fontSize:".52rem",letterSpacing:".35em",textTransform:"uppercase",
         color:"var(--wine3)",margin:"1.5rem 0 .7rem"}},"Wine Intelligence"),
       h("h1",{className:"hero-title"},"Adega Digital"),
-      h("p",{className:"hero-sub"},"Sommelier com Inteligência Artificial"),
+  h("p",{className:"hero-sub"},"Busca inteligente de vinhos"),
       h("p",{className:"hero-desc"},
         "Busque qualquer vinho do mundo. Notas de degustação, perfil de sabor, harmonização e dados reais da Vivino."),
       h("div",{style:{display:"flex",gap:"1rem",flexWrap:"wrap",justifyContent:"center"}},
@@ -437,7 +408,7 @@ function App(){
         h("div",{className:"features-grid"},
           ...[
             ["🔍","Busca Livre","Por nome, uva, região, safra, sabor, país ou qualquer característica."],
-            ["🤖","Grok AI Sommelier","Dados precisos com conhecimento profundo de enologia mundial via xAI Grok."],
+            ["📡","Busca por API","Dados reais obtidos diretamente da API pública de vinhos."],
             ["🍇","Dados Vivino","Rating real, imagem do rótulo e preço de mercado direto da Vivino."],
             ["📊","Perfil de Sabor","Acidez, taninos, corpo e frutado em barras interativas."],
             ["🍽","Harmonização","Sugestões de pratos que combinam com cada vinho."],
@@ -456,45 +427,18 @@ function App(){
       h("p",{className:"section-label"},"Busca inteligente"),
       h("h2",{className:"section-title"},"Encontre seu vinho perfeito"),
       h("div",{className:"divider"}),
-      !keySet
-        ? h("div",{className:"setup-box"},
-            h("p",{style:{fontSize:"1.8rem",marginBottom:"1rem"}},"🔑"),
-            h("h3",{className:"serif",style:{fontSize:"1.7rem",fontStyle:"italic",fontWeight:300,
-              color:"var(--text)",marginBottom:".5rem"}},"Configure sua Grok API Key"),
-            h("div",{className:"grok-badge",style:{margin:"0 auto .8rem",display:"flex",width:"fit-content"}},
-              "⚡ xAI Grok · US$ 25 grátis/mês"
-            ),
-            h("p",{style:{fontSize:".6rem",color:"var(--muted)",lineHeight:1.7,marginBottom:"1.5rem"}},
-              "Use a API do Grok gratuitamente com US$ 25 de créditos por mês."),
-            h("ol",{style:{fontSize:".6rem",color:"var(--text2)",lineHeight:2.2,
-              paddingLeft:"1.2rem",textAlign:"left",marginBottom:"1.2rem"}},
-              h("li",null,h("a",{href:"https://console.x.ai",target:"_blank",
-                style:{color:"var(--accent)",textDecoration:"none"}},"Acesse console.x.ai")),
-              h("li",null,"Faça login com sua conta do X (Twitter)"),
-              h("li",null,"Clique em API Keys → Create API Key"),
-              h("li",null,"Copie a key (começa com xai-) e cole abaixo ↓")
-            ),
-            h("input",{className:"api-input",type:"password",
-              placeholder:"xai-...",
-              value:keyInput,onChange:e=>setKeyInput(e.target.value),
-              onKeyDown:e=>e.key==="Enter"&&saveKey()}),
-            h("p",{style:{fontSize:".55rem",color:"var(--muted)",lineHeight:1.6,marginBottom:"1.2rem"}},
-              "🔒 Salva apenas no seu navegador. Nunca enviada para servidores externos."),
-            h("button",{className:"btn-wine",onClick:saveKey,
-              style:{width:"100%",justifyContent:"center",borderRadius:10}},"Salvar e começar →")
-          )
-        : h(Explorer,{apiKey})
+      h(Explorer)
     ),
 
     /* FOOTER */
     h("footer",null,
       h("p",{className:"serif",style:{fontStyle:"italic",fontSize:"1.8rem",fontWeight:300,color:"var(--text)",marginBottom:".4rem"}},"Adega Digital"),
-      h("p",{style:{fontSize:".5rem",color:"var(--muted)",letterSpacing:".2em",textTransform:"uppercase",marginBottom:"1.5rem"}},"Wine Intelligence · Grok AI + Vivino"),
+  h("p",{style:{fontSize:".5rem",color:"var(--muted)",letterSpacing:".2em",textTransform:"uppercase",marginBottom:"1.5rem"}},"Wine Intelligence · API + Vivino"),
       h("div",{style:{display:"flex",justifyContent:"center",gap:"1.5rem",flexWrap:"wrap",marginBottom:"1.5rem"}},
         h("a",{href:"https://github.com/Caxito01/adegadigital",target:"_blank",
           style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"GitHub"),
-        h("a",{href:"https://console.x.ai",target:"_blank",
-          style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"xAI Console"),
+        h("a",{href:"https://www.vivino.com/api",target:"_blank",
+          style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"Vivino"),
         h("a",{href:"https://www.vivino.com",target:"_blank",
           style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"Vivino")
       ),
