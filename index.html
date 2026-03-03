@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Adega Digital — Wine Explorer</title>
-<meta name="description" content="Busque vinhos do mundo com inteligência artificial. Notas de degustação, perfil de sabor, harmonização e mais."/>
+<meta name="description" content="Busque vinhos do mundo com inteligência artificial."/>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍷</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
@@ -13,734 +13,495 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#0b0707;
-  --bg2:#0f0909;
-  --card:#160c0c;
-  --card2:#1c1010;
-  --border:#261212;
-  --border2:#341818;
-  --text:#f2ebe3;
-  --text2:#c8a882;
-  --muted:#7a5c4a;
-  --muted2:#5a3c2a;
-  --accent:#c9793a;
-  --accent2:#e8a86a;
-  --wine:#7a1525;
-  --wine2:#9a2038;
-  --wine3:#c03050;
-  --gold:#c8a84b;
-  --gold2:#dfc070;
+  --bg:#0b0707;--bg2:#0f0909;--card:#160c0c;--card2:#1c1010;
+  --border:#261212;--border2:#341818;
+  --text:#f2ebe3;--text2:#c8a882;--muted:#7a5c4a;--muted2:#5a3c2a;
+  --accent:#c9793a;--accent2:#e8a86a;
+  --wine:#7a1525;--wine2:#9a2038;--wine3:#c03050;
+  --gold:#c8a84b;--gold2:#dfc070;
   --green:#3a6a4a;
-  --white-wine:#c8b860;
-  --rose:#c85878;
-  --sparkling:#5898c8;
+  --white-wine:#c8b860;--rose:#c85878;--sparkling:#5898c8;
 }
 html{scroll-behavior:smooth}
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:'DM Mono',monospace;
-  min-height:100vh;
-  overflow-x:hidden;
-}
-
-/* Noise overlay */
-body::after{
-  content:'';
-  position:fixed;inset:0;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  pointer-events:none;z-index:9999;
-}
-
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
 .serif{font-family:'Cormorant Garamond',serif}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* Scrollbar */
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-/* ─ HERO ─────────────────────────────────── */
-.hero{
-  min-height:100vh;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:2rem;
-  position:relative;
-  text-align:center;
-}
-.hero-bg{
-  position:absolute;inset:0;
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 30%, rgba(138,20,40,.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 60% at 80% 80%, rgba(100,15,30,.1) 0%, transparent 60%);
-  pointer-events:none;
-}
-.hero-line{
-  width:1px;height:80px;
-  background:linear-gradient(to bottom, transparent, var(--border2), transparent);
-  margin:0 auto;
-}
-.hero-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(3.5rem,9vw,7rem);
-  font-weight:300;
-  font-style:italic;
-  letter-spacing:-0.03em;
-  line-height:1;
-  color:var(--text);
-  margin-bottom:.5rem;
-}
-.hero-sub{
-  font-size:.6rem;
-  letter-spacing:.3em;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin-bottom:3rem;
-}
-.hero-desc{
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.2rem;
-  font-style:italic;
-  color:var(--text2);
-  max-width:520px;
-  line-height:1.7;
-  margin-bottom:2.5rem;
-}
-.btn-wine{
-  display:inline-flex;align-items:center;gap:.6rem;
-  background:var(--wine);color:var(--text);
-  border:none;border-radius:100px;
-  padding:.9rem 2.2rem;
-  font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
-  cursor:pointer;font-family:'DM Mono',monospace;
-  transition:all .25s;
-  text-decoration:none;
-}
-.btn-wine:hover{background:var(--wine2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(154,32,56,.3)}
-.btn-outline{
-  display:inline-flex;align-items:center;gap:.6rem;
-  background:transparent;color:var(--text2);
-  border:1px solid var(--border2);border-radius:100px;
-  padding:.9rem 2.2rem;
-  font-size:.65rem;letter-spacing:.18em;text-transform:uppercase;
-  cursor:pointer;font-family:'DM Mono',monospace;
-  transition:all .25s;
-  text-decoration:none;
-}
-.btn-outline:hover{border-color:var(--accent);color:var(--accent2)}
-
-/* ─ NAV ──────────────────────────────────── */
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  padding:.9rem 2rem;
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(11,7,7,.85);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
-}
-.nav-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:1.3rem;font-weight:300;
-  color:var(--text);text-decoration:none;
-}
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(11,7,7,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.3rem;font-weight:300;color:var(--text);text-decoration:none}
 .nav-links{display:flex;gap:1.5rem;align-items:center}
-.nav-link{
-  font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;
-  color:var(--muted);text-decoration:none;transition:color .2s;
-}
+.nav-link{font-size:.56rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .2s;cursor:pointer;background:none;border:none;font-family:'DM Mono',monospace}
 .nav-link:hover{color:var(--accent2)}
 
-/* ─ SECTIONS ─────────────────────────────── */
-section{padding:6rem 1.5rem;max-width:1100px;margin:0 auto}
-.section-label{
-  font-size:.52rem;letter-spacing:.3em;text-transform:uppercase;
-  color:var(--wine3);margin-bottom:1rem;
-}
-.section-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(2rem,5vw,3.2rem);
-  font-weight:300;font-style:italic;
-  color:var(--text);line-height:1.15;
-  margin-bottom:1.2rem;
-}
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;text-align:center}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 60% 50% at 50% 30%,rgba(138,20,40,.2) 0%,transparent 70%),radial-gradient(ellipse 40% 60% at 80% 80%,rgba(100,15,30,.1) 0%,transparent 60%);pointer-events:none}
+.hero-vline{width:1px;height:70px;background:linear-gradient(to bottom,transparent,var(--border2),transparent);margin:0 auto}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(3.5rem,9vw,7rem);font-weight:300;font-style:italic;letter-spacing:-0.03em;line-height:1;color:var(--text);margin-bottom:.5rem}
+.hero-sub{font-size:.58rem;letter-spacing:.32em;text-transform:uppercase;color:var(--muted);margin-bottom:2.5rem}
+.hero-desc{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-style:italic;color:var(--text2);max-width:500px;line-height:1.75;margin-bottom:2.5rem}
+.btn-wine{display:inline-flex;align-items:center;gap:.6rem;background:var(--wine);color:var(--text);border:none;border-radius:100px;padding:.9rem 2.2rem;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all .25s;text-decoration:none}
+.btn-wine:hover{background:var(--wine2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(154,32,56,.3)}
+.btn-outline{display:inline-flex;align-items:center;gap:.6rem;background:transparent;color:var(--text2);border:1px solid var(--border2);border-radius:100px;padding:.9rem 2.2rem;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:all .25s;text-decoration:none}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent2)}
+.scroll-hint{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer}
+.scroll-hint p{font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted2)}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+.scroll-arrow{animation:bounce 2s ease-in-out infinite;font-size:.8rem;opacity:.4}
+
+/* SECTIONS */
+.section-wrap{max-width:1100px;margin:0 auto;padding:5rem 1.5rem}
+.section-label{font-size:.5rem;letter-spacing:.3em;text-transform:uppercase;color:var(--wine3);margin-bottom:.8rem}
+.section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,5vw,3rem);font-weight:300;font-style:italic;color:var(--text);line-height:1.15;margin-bottom:1rem}
 .divider{height:1px;background:linear-gradient(90deg,var(--border2),transparent);margin-bottom:3rem}
 
-/* ─ FEATURES ─────────────────────────────── */
-.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.2rem}
-.feature-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:14px;padding:1.6rem;
-  transition:border-color .2s;
-}
+/* FEATURES */
+.features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;transition:border-color .2s}
 .feature-card:hover{border-color:var(--border2)}
-.feature-icon{font-size:1.6rem;margin-bottom:1rem}
-.feature-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.15rem;font-weight:600;
-  color:var(--text);margin-bottom:.5rem;
-}
-.feature-desc{font-size:.62rem;color:var(--muted);line-height:1.7}
+.feature-icon{font-size:1.5rem;margin-bottom:.8rem}
+.feature-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.4rem}
+.feature-desc{font-size:.6rem;color:var(--muted);line-height:1.7}
 
-/* ─ API KEY SETUP ─────────────────────────── */
-.setup-box{
-  background:var(--card);
-  border:1px solid var(--border2);
-  border-radius:16px;
-  padding:2.5rem;
-  max-width:600px;margin:0 auto;
-  text-align:center;
-}
-.api-input{
-  width:100%;padding:.9rem 1.2rem;
-  background:var(--bg2);border:1px solid var(--border2);
-  border-radius:10px;color:var(--text);
-  font-family:'DM Mono',monospace;font-size:.75rem;
-  outline:none;transition:border-color .2s;
-  margin:.8rem 0;
-  letter-spacing:.05em;
-}
+/* SETUP */
+.setup-outer{background:var(--bg2);border-top:1px solid var(--border);padding:5rem 1.5rem}
+.setup-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:2.5rem;max-width:580px;margin:0 auto;text-align:center}
+.api-input{width:100%;padding:.9rem 1.2rem;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:.72rem;outline:none;transition:border-color .2s;margin:.8rem 0;letter-spacing:.04em}
 .api-input:focus{border-color:var(--accent)}
 .api-input::placeholder{color:var(--muted2)}
-.api-hint{font-size:.58rem;color:var(--muted);line-height:1.6}
 
-/* ─ SEARCH BAR ────────────────────────────── */
-.search-wrap{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:14px;padding:1rem 1.4rem;
-  display:flex;align-items:center;gap:1rem;
-  box-shadow:0 8px 32px rgba(0,0,0,.4);
-  transition:border-color .2s;
-}
+/* SEARCH */
+.search-wrap{background:var(--card);border:1px solid var(--border2);border-radius:14px;padding:1rem 1.4rem;display:flex;align-items:center;gap:1rem;box-shadow:0 8px 32px rgba(0,0,0,.4);transition:border-color .2s;margin-bottom:1rem}
 .search-wrap:focus-within{border-color:var(--accent)}
-.search-input{
-  background:transparent;border:none;outline:none;
-  color:var(--text);width:100%;
-  font-family:'Cormorant Garamond',serif;
-  font-size:1.5rem;font-weight:300;font-style:italic;
-  caret-color:var(--accent);
-}
+.search-input{background:transparent;border:none;outline:none;color:var(--text);width:100%;font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;font-style:italic;caret-color:var(--accent)}
 .search-input::placeholder{color:var(--muted)}
-
-/* ─ BUTTONS ──────────────────────────────── */
-.btn-search{
-  background:var(--wine);color:var(--text);border:none;
-  border-radius:10px;padding:.8rem 1.8rem;
-  font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;
-  cursor:pointer;font-family:'DM Mono',monospace;
-  transition:background .2s;white-space:nowrap;flex-shrink:0;
-}
+.btn-search{background:var(--wine);color:var(--text);border:none;border-radius:10px;padding:.8rem 1.8rem;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;transition:background .2s;white-space:nowrap;flex-shrink:0}
 .btn-search:hover:not(:disabled){background:var(--wine2)}
 .btn-search:disabled{opacity:.4;cursor:not-allowed}
-.chip{
-  padding:5px 13px;border:1px solid var(--border2);
-  border-radius:100px;font-size:.6rem;color:var(--muted);
-  cursor:pointer;transition:all .2s;background:transparent;
-  font-family:'DM Mono',monospace;
-}
+.chip{padding:5px 13px;border:1px solid var(--border2);border-radius:100px;font-size:.58rem;color:var(--muted);cursor:pointer;transition:all .2s;background:transparent;font-family:'DM Mono',monospace}
 .chip:hover{border-color:var(--accent);color:var(--accent2);background:rgba(201,121,58,.08)}
 
-/* ─ WINE CARD ─────────────────────────────── */
-.wine-card{
-  background:var(--card);border:1px solid var(--border);
-  border-radius:12px;padding:1.2rem 1.4rem;
-  display:flex;gap:1rem;align-items:flex-start;
-  cursor:pointer;transition:all .2s;
-}
-.wine-card:hover,.wine-card.selected{border-color:var(--border2)}
+/* WINE CARD */
+.wine-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem 1.4rem;display:flex;gap:1rem;align-items:flex-start;cursor:pointer;transition:all .2s}
+.wine-card:hover{border-color:var(--border2)}
 .wine-card.selected{background:var(--card2);border-color:var(--accent);box-shadow:0 0 24px rgba(201,121,58,.12)}
-.tag{
-  display:inline-block;padding:2px 9px;border-radius:100px;
-  font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;
-}
+.tag{display:inline-block;padding:2px 9px;border-radius:100px;font-size:.54rem;letter-spacing:.1em;text-transform:uppercase}
 
-/* ─ DETAIL PANEL ──────────────────────────── */
-.detail-panel{
-  background:var(--card);border:1px solid var(--border2);
-  border-radius:16px;overflow:hidden;
-  position:sticky;top:5rem;
-}
-.detail-body{padding:1.3rem 1.6rem;display:flex;flex-direction:column;gap:1.3rem;max-height:65vh;overflow-y:auto}
+/* DETAIL */
+.detail-panel{background:var(--card);border:1px solid var(--border2);border-radius:16px;overflow:hidden;position:sticky;top:5rem}
+.detail-body{padding:1.3rem 1.6rem;display:flex;flex-direction:column;gap:1.2rem;max-height:62vh;overflow-y:auto}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
 .info-cell{background:var(--bg2);border-radius:8px;padding:.65rem .85rem;border:1px solid var(--border)}
-.info-label{font-size:.46rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:2px}
-.info-val{font-size:.72rem;color:var(--text2)}
 
-/* ─ SCORE RING ────────────────────────────── */
-.score-ring-wrap{position:relative;width:88px;height:88px;flex-shrink:0}
+/* SCORE RING */
+.score-ring-wrap{position:relative;width:86px;height:86px;flex-shrink:0}
 
-/* ─ FLAVOR BAR ────────────────────────────── */
+/* FLAVOR BAR */
 .flavor-row{display:flex;align-items:center;gap:.7rem}
-.flavor-label{font-size:.56rem;color:var(--muted);width:70px;text-transform:capitalize;letter-spacing:.06em;flex-shrink:0}
-.flavor-track{flex:1;height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.flavor-fill{height:100%;border-radius:2px;transition:width 1s ease}
-.flavor-num{font-size:.56rem;color:var(--muted);width:24px;text-align:right}
 
-/* ─ LOADING ───────────────────────────────── */
+/* LOADING */
 @keyframes wineRise{0%,100%{transform:scaleY(.5);opacity:.3}50%{transform:scaleY(1);opacity:1}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.fade-up{animation:fadeUp .45s ease-out forwards;opacity:0}
+.fade-up{animation:fadeUp .4s ease-out forwards;opacity:0}
 
-/* ─ FOOTER ────────────────────────────────── */
-footer{
-  border-top:1px solid var(--border);
-  padding:3rem 2rem;
-  text-align:center;
-}
-.footer-logo{
-  font-family:'Cormorant Garamond',serif;
-  font-style:italic;font-size:2rem;font-weight:300;
-  color:var(--text);margin-bottom:.5rem;
-}
-.footer-sub{font-size:.52rem;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1.5rem}
-.footer-links{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap}
-.footer-link{font-size:.58rem;color:var(--muted);text-decoration:none;letter-spacing:.1em;transition:color .2s}
-.footer-link:hover{color:var(--accent2)}
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:3rem 2rem;text-align:center}
 
-/* ─ RESPONSIVE ───────────────────────────── */
 @media(max-width:680px){
   .hero-title{font-size:3rem}
-  .nav-links{display:none}
+  .nav-links .nav-link:not(:last-child){display:none}
   .results-grid{grid-template-columns:1fr!important}
 }
 </style>
 </head>
 <body>
-
 <div id="root"></div>
-
 <script>
-const { useState, useEffect, useRef, createElement: h } = React;
+const { useState, useEffect, useRef, createElement:h } = React;
 
-/* ────────────────────────────────────────────
-   HELPERS
-──────────────────────────────────────────── */
 const TIPO_COLOR = {
-  Tinto:"var(--wine2)", Branco:"var(--white-wine)",
-  Rosé:"var(--rose)", Espumante:"var(--sparkling)", Sobremesa:"var(--gold)"
+  Tinto:"var(--wine2)",Branco:"var(--white-wine)",
+  Rosé:"var(--rose)",Espumante:"var(--sparkling)",Sobremesa:"var(--gold)"
 };
 
-function ScoreRing({ score }) {
-  const r = 36, c = 2 * Math.PI * r;
-  const fill = (score / 100) * c;
-  const col = score >= 93 ? "var(--gold2)" : score >= 88 ? "var(--accent2)" : score >= 83 ? "var(--accent)" : "var(--muted)";
-  return h("div", { className:"score-ring-wrap" },
-    h("svg", { width:88, height:88, viewBox:"0 0 88 88" },
-      h("circle", { cx:44, cy:44, r, fill:"none", stroke:"var(--border)", strokeWidth:5 }),
-      h("circle", { cx:44, cy:44, r, fill:"none", stroke:col, strokeWidth:5,
-        strokeDasharray:`${fill} ${c}`, strokeDashoffset:c/4, strokeLinecap:"round",
-        style:{ transition:"stroke-dasharray 1s" } })
+/* ── SCORE RING ── */
+function ScoreRing({score}){
+  const r=36,c=2*Math.PI*r,fill=(score/100)*c;
+  const col=score>=93?"var(--gold2)":score>=88?"var(--accent2)":score>=83?"var(--accent)":"var(--muted)";
+  return h("div",{className:"score-ring-wrap"},
+    h("svg",{width:86,height:86,viewBox:"0 0 86 86"},
+      h("circle",{cx:43,cy:43,r,fill:"none",stroke:"var(--border)",strokeWidth:5}),
+      h("circle",{cx:43,cy:43,r,fill:"none",stroke:col,strokeWidth:5,
+        strokeDasharray:`${fill} ${c}`,strokeDashoffset:c/4,strokeLinecap:"round",
+        style:{transition:"stroke-dasharray 1s"}})
     ),
-    h("div", { style:{ position:"absolute", inset:0, display:"flex", flexDirection:"column",
-      alignItems:"center", justifyContent:"center" } },
-      h("span", { className:"serif", style:{ fontSize:"1.5rem", fontWeight:300, color:col, lineHeight:1 } }, score),
-      h("span", { style:{ fontSize:".4rem", letterSpacing:".15em", color:"var(--muted)", textTransform:"uppercase" } }, "pts")
+    h("div",{style:{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}},
+      h("span",{className:"serif",style:{fontSize:"1.5rem",fontWeight:300,color:col,lineHeight:1}},score),
+      h("span",{style:{fontSize:".38rem",letterSpacing:".15em",color:"var(--muted)",textTransform:"uppercase"}},"pts")
     )
   );
 }
 
-function FlavorBar({ label, value, color }) {
-  return h("div", { className:"flavor-row" },
-    h("span", { className:"flavor-label" }, label),
-    h("div", { className:"flavor-track" },
-      h("div", { className:"flavor-fill", style:{ width:`${value}%`, background:color } })
+/* ── FLAVOR BAR ── */
+function FlavorBar({label,value,color}){
+  return h("div",{className:"flavor-row"},
+    h("span",{style:{fontSize:".55rem",color:"var(--muted)",width:68,textTransform:"capitalize",letterSpacing:".06em",flexShrink:0}},label),
+    h("div",{style:{flex:1,height:3,background:"var(--border)",borderRadius:2,overflow:"hidden"}},
+      h("div",{style:{height:"100%",width:`${value}%`,background:color,borderRadius:2,transition:"width 1s ease"}})
     ),
-    h("span", { className:"flavor-num" }, value)
+    h("span",{style:{fontSize:".55rem",color:"var(--muted)",width:22,textAlign:"right"}},value)
   );
 }
 
-/* ────────────────────────────────────────────
-   CLAUDE API
-──────────────────────────────────────────── */
-async function searchWines(query, apiKey) {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+/* ── CLAUDE API ── */
+async function searchWines(query,apiKey){
+  const res=await fetch("https://api.anthropic.com/v1/messages",{
     method:"POST",
-    headers:{ "Content-Type":"application/json", "x-api-key": apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
-    body: JSON.stringify({
-      model:"claude-sonnet-4-5",
-      max_tokens:2000,
-      messages:[{ role:"user", content:
+    headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01"},
+    body:JSON.stringify({
+      model:"claude-opus-4-5",max_tokens:2000,
+      messages:[{role:"user",content:
 `Você é sommelier especialista. Busca: "${query}"
 Retorne APENAS JSON puro sem markdown:
 {"vinhos":[{"nome":"","produtor":"","pais":"","regiao":"","ano":2019,"tipo":"Tinto","uvas":[""],"pontuacao":92,"preco":"R$ 180","alcool":"14%","temperatura":"16-18°C","decantacao":"1h","guarda":"10-15 anos","descricao":"","notas":"","perfil":{"acidez":68,"taninos":88,"corpo":92,"frutado":76},"harmonizacao":[""]}]}
-Retorne 5 vinhos reais e relevantes. Tipos: Tinto, Branco, Rosé, Espumante, Sobremesa. Pontuações 82-97. Preços em BRL.` }]
+Retorne 5 vinhos reais relevantes. Tipos: Tinto, Branco, Rosé, Espumante, Sobremesa. Pontuações 82-97. Preços BRL.`}]
     })
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`HTTP ${res.status}: ${t.slice(0,200)}`);
-  }
-  const data = await res.json();
-  const raw = data?.content?.[0]?.text || "";
-  try { return JSON.parse(raw).vinhos; } catch {}
-  const m = raw.match(/\{[\s\S]*"vinhos"[\s\S]*\}/);
-  if (m) try { return JSON.parse(m[0]).vinhos; } catch {}
-  const a = raw.match(/\[[\s\S]*\]/);
-  if (a) try { return JSON.parse(a[0]); } catch {}
-  throw new Error("Não foi possível parsear a resposta");
+  if(!res.ok){const t=await res.text();throw new Error(`HTTP ${res.status}: ${t.slice(0,200)}`)}
+  const data=await res.json();
+  const raw=data?.content?.[0]?.text||"";
+  try{return JSON.parse(raw).vinhos}catch{}
+  const m=raw.match(/\{[\s\S]*"vinhos"[\s\S]*\}/);
+  if(m)try{return JSON.parse(m[0]).vinhos}catch{}
+  const a=raw.match(/\[[\s\S]*\]/);
+  if(a)try{return JSON.parse(a[0])}catch{}
+  throw new Error("Não foi possível parsear: "+raw.slice(0,200));
 }
 
-async function enrichVivino(nome) {
-  try {
-    const t = `https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(nome)}&language=pt&currency_code=BRL&per_page=1`;
-    const r = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(t)}`,
-      { headers:{ Accept:"application/json" }, signal:AbortSignal.timeout(4000) });
-    if (!r.ok) return null;
-    const j = await r.json();
-    const m = j?.explore_vintage?.matches?.[0];
-    if (!m) return null;
-    const v = m.vintage || {}, w = v.wine || {};
-    const s = v.statistics || {}, st = w.taste?.structure || {};
-    return {
-      rating: s.ratings_average,
-      count: s.ratings_count,
-      img: v.image?.location ? `https:${v.image.location}` : null,
-      url: v.id ? `https://www.vivino.com/w/${v.id}` : null,
-      preco: m.price?.amount ? `${m.price.currency||"R$"} ${Number(m.price.amount).toFixed(2)}` : null,
-      perfil:{
-        ...(st.acidity   ? {acidez:   Math.round(st.acidity*20)}   : {}),
-        ...(st.tannin    ? {taninos:  Math.round(st.tannin*20)}    : {}),
-        ...(st.intensity ? {corpo:    Math.round(st.intensity*20)} : {}),
-      }
+async function enrichVivino(nome){
+  try{
+    const t=`https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(nome)}&language=pt&currency_code=BRL&per_page=1`;
+    const r=await fetch(`https://corsproxy.io/?url=${encodeURIComponent(t)}`,
+      {headers:{Accept:"application/json"},signal:AbortSignal.timeout(4000)});
+    if(!r.ok)return null;
+    const j=await r.json();
+    const m=j?.explore_vintage?.matches?.[0];
+    if(!m)return null;
+    const v=m.vintage||{},w=v.wine||{},s=v.statistics||{},st=w.taste?.structure||{};
+    return{
+      rating:s.ratings_average,count:s.ratings_count,
+      img:v.image?.location?`https:${v.image.location}`:null,
+      url:v.id?`https://www.vivino.com/w/${v.id}`:null,
+      preco:m.price?.amount?`${m.price.currency||"R$"} ${Number(m.price.amount).toFixed(2)}`:null,
+      perfil:{...(st.acidity?{acidez:Math.round(st.acidity*20)}:{}),
+              ...(st.tannin?{taninos:Math.round(st.tannin*20)}:{}),
+              ...(st.intensity?{corpo:Math.round(st.intensity*20)}:{})}
     };
-  } catch { return null; }
+  }catch{return null}
 }
 
-/* ────────────────────────────────────────────
-   WINE CARD
-──────────────────────────────────────────── */
-function WineCard({ wine, index, selected, onSelect }) {
-  const viv = wine._viv;
-  const tc = TIPO_COLOR[wine.tipo] || "var(--accent)";
-  return h("div", {
+/* ── WINE CARD ── */
+function WineCard({wine,index,selected,onSelect}){
+  const viv=wine._viv,tc=TIPO_COLOR[wine.tipo]||"var(--accent)";
+  return h("div",{
     className:`wine-card fade-up ${selected?"selected":""}`,
-    style:{ animationDelay:`${index*.07}s` },
-    onClick:() => onSelect(wine)
+    style:{animationDelay:`${index*.07}s`},
+    onClick:()=>onSelect(wine)
   },
-    h("div", { style:{ width:42, height:42, borderRadius:8, background:`${tc}15`,
-      border:`1px solid ${tc}30`, display:"flex", alignItems:"center",
-      justifyContent:"center", flexShrink:0, overflow:"hidden" } },
+    h("div",{style:{width:42,height:42,borderRadius:8,background:`${tc}15`,border:`1px solid ${tc}30`,
+      display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}},
       viv?.img
-        ? h("img", { src:viv.img, alt:"", style:{ width:"100%", height:"100%", objectFit:"contain" },
-            onError:e=>{e.target.style.display="none"} })
-        : h("span", { style:{ fontSize:"1.1rem" } }, "🍷")
+        ?h("img",{src:viv.img,alt:"",style:{width:"100%",height:"100%",objectFit:"contain"},onError:e=>{e.target.style.display="none"}})
+        :h("span",{style:{fontSize:"1.1rem"}},"🍷")
     ),
-    h("div", { style:{ flex:1, minWidth:0 } },
-      h("div", { style:{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:".5rem", flexWrap:"wrap" } },
-        h("div", null,
-          h("p", { className:"serif", style:{ fontSize:"1.02rem", fontWeight:600, color:"var(--text)", lineHeight:1.2 } }, wine.nome),
-          h("p", { style:{ fontSize:".57rem", color:"var(--muted)", marginTop:2, letterSpacing:".07em" } },
-            `${wine.produtor} · ${wine.regiao}`)
+    h("div",{style:{flex:1,minWidth:0}},
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:".5rem",flexWrap:"wrap"}},
+        h("div",null,
+          h("p",{className:"serif",style:{fontSize:"1rem",fontWeight:600,color:"var(--text)",lineHeight:1.2}},wine.nome),
+          h("p",{style:{fontSize:".56rem",color:"var(--muted)",marginTop:2,letterSpacing:".07em"}},`${wine.produtor} · ${wine.regiao}`)
         ),
-        h("div", { style:{ display:"flex", alignItems:"center", gap:3, flexShrink:0 } },
-          h("span", { className:"serif", style:{ fontSize:"1.2rem", color:"var(--gold)" } }, wine.pontuacao),
-          h("span", { style:{ fontSize:".46rem", color:"var(--muted)", letterSpacing:".1em" } }, "pts")
+        h("div",{style:{display:"flex",alignItems:"center",gap:3,flexShrink:0}},
+          h("span",{className:"serif",style:{fontSize:"1.15rem",color:"var(--gold)"}},wine.pontuacao),
+          h("span",{style:{fontSize:".45rem",color:"var(--muted)",letterSpacing:".1em",marginLeft:2}},"pts")
         )
       ),
-      h("div", { style:{ display:"flex", gap:".35rem", marginTop:".5rem", flexWrap:"wrap", alignItems:"center" } },
-        h("span", { className:"tag", style:{ background:`${tc}18`, color:tc, border:`1px solid ${tc}35` } }, wine.tipo),
-        h("span", { className:"tag", style:{ background:"var(--border)", color:"var(--muted)" } }, wine.ano),
-        wine.uvas?.slice(0,1).map(u => h("span", { key:u, className:"tag", style:{ background:"var(--border)", color:"var(--muted)" } }, u)),
-        viv?.rating && h("span", { style:{ fontSize:".5rem", padding:"2px 8px", borderRadius:100,
-          background:"rgba(110,15,35,.3)", border:"1px solid rgba(180,40,60,.3)", color:"#f88" } },
+      h("div",{style:{display:"flex",gap:".32rem",marginTop:".45rem",flexWrap:"wrap",alignItems:"center"}},
+        h("span",{className:"tag",style:{background:`${tc}18`,color:tc,border:`1px solid ${tc}35`}},wine.tipo),
+        h("span",{className:"tag",style:{background:"var(--border)",color:"var(--muted)"}},wine.ano),
+        wine.uvas?.slice(0,1).map(u=>h("span",{key:u,className:"tag",style:{background:"var(--border)",color:"var(--muted)"}},u)),
+        viv?.rating&&h("span",{style:{fontSize:".48rem",padding:"2px 7px",borderRadius:100,
+          background:"rgba(110,15,35,.3)",border:"1px solid rgba(180,40,60,.3)",color:"#f88"}},
           `🍇 ${viv.rating.toFixed(1)}★`)
       ),
-      h("p", { style:{ fontSize:".6rem", color:"var(--muted)", marginTop:".5rem", lineHeight:1.5,
-        display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", overflow:"hidden" } }, wine.descricao)
+      h("p",{style:{fontSize:".58rem",color:"var(--muted)",marginTop:".45rem",lineHeight:1.5,
+        display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}},wine.descricao)
     )
   );
 }
 
-/* ────────────────────────────────────────────
-   DETAIL PANEL
-──────────────────────────────────────────── */
-function DetailPanel({ wine, onClose }) {
-  const viv = wine._viv;
-  const tc = TIPO_COLOR[wine.tipo] || "var(--accent)";
-  const perfil = (viv?.perfil && Object.keys(viv.perfil).length > 0) ? viv.perfil : wine.perfil;
-  return h("div", { className:"detail-panel fade-up" },
-    // Header
-    h("div", { style:{ padding:"1.5rem 1.6rem 1.1rem", borderBottom:"1px solid var(--border)",
-      background:"linear-gradient(135deg,var(--card2),var(--card))", position:"relative" } },
-      h("button", { onClick:onClose, style:{ position:"absolute", top:12, right:14, background:"none",
-        border:"none", color:"var(--muted)", cursor:"pointer", fontSize:".85rem", padding:"4px 8px" } }, "✕"),
-      h("p", { style:{ fontSize:".5rem", letterSpacing:".2em", textTransform:"uppercase", color:tc, marginBottom:5 } },
+/* ── DETAIL PANEL ── */
+function DetailPanel({wine,onClose}){
+  const viv=wine._viv,tc=TIPO_COLOR[wine.tipo]||"var(--accent)";
+  const perfil=(viv?.perfil&&Object.keys(viv.perfil).length>0)?viv.perfil:wine.perfil;
+  return h("div",{className:"detail-panel fade-up"},
+    h("div",{style:{padding:"1.4rem 1.5rem 1rem",borderBottom:"1px solid var(--border)",
+      background:"linear-gradient(135deg,var(--card2),var(--card))",position:"relative"}},
+      h("button",{onClick:onClose,style:{position:"absolute",top:12,right:14,background:"none",
+        border:"none",color:"var(--muted)",cursor:"pointer",fontSize:".85rem",padding:"4px 8px"}},"✕"),
+      h("p",{style:{fontSize:".48rem",letterSpacing:".2em",textTransform:"uppercase",color:tc,marginBottom:4}},
         `${wine.pais} · ${wine.regiao}`),
-      h("h3", { className:"serif", style:{ fontSize:"1.5rem", fontWeight:600, color:"var(--text)", lineHeight:1.15 } }, wine.nome),
-      h("p", { style:{ fontSize:".62rem", color:"var(--muted)", marginTop:".2rem", letterSpacing:".05em" } },
-        `${wine.produtor} · ${wine.ano}`),
-      h("div", { style:{ display:"flex", justifyContent:"space-between", alignItems:"center", marginTop:"1rem" } },
-        h(ScoreRing, { score:wine.pontuacao }),
-        h("div", { style:{ textAlign:"right" } },
-          h("p", { className:"serif", style:{ fontSize:"1.4rem", color:"var(--accent2)", lineHeight:1 } },
-            viv?.preco || wine.preco),
-          h("p", { style:{ fontSize:".5rem", color:"var(--muted)", letterSpacing:".1em" } }, "preço médio"),
-          viv?.count && h("p", { style:{ fontSize:".55rem", color:"var(--muted)", marginTop:4 } },
+      h("h3",{className:"serif",style:{fontSize:"1.45rem",fontWeight:600,color:"var(--text)",lineHeight:1.15}},wine.nome),
+      h("p",{style:{fontSize:".6rem",color:"var(--muted)",marginTop:".2rem"}},`${wine.produtor} · ${wine.ano}`),
+      h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:"1rem"}},
+        h(ScoreRing,{score:wine.pontuacao}),
+        h("div",{style:{textAlign:"right"}},
+          h("p",{className:"serif",style:{fontSize:"1.35rem",color:"var(--accent2)",lineHeight:1}},viv?.preco||wine.preco),
+          h("p",{style:{fontSize:".48rem",color:"var(--muted)",letterSpacing:".1em"}},"preço médio"),
+          viv?.count&&h("p",{style:{fontSize:".53rem",color:"var(--muted)",marginTop:3}},
             `📊 ${(viv.count/1000).toFixed(1)}k avaliações`),
-          viv?.url && h("a", { href:viv.url, target:"_blank", rel:"noopener noreferrer",
-            style:{ fontSize:".55rem", color:"var(--accent)", textDecoration:"none", display:"block", marginTop:4 } },
+          viv?.url&&h("a",{href:viv.url,target:"_blank",rel:"noopener noreferrer",
+            style:{fontSize:".53rem",color:"var(--accent)",textDecoration:"none",display:"block",marginTop:3}},
             "🔗 Ver na Vivino →")
         )
       )
     ),
-    // Body
-    h("div", { className:"detail-body" },
-      // Notas
-      h("div", null,
-        h("p", { style:{ fontSize:".5rem", letterSpacing:".2em", textTransform:"uppercase", color:"var(--muted)", marginBottom:".5rem" } }, "Notas de Degustação"),
-        h("p", { className:"serif", style:{ fontStyle:"italic", fontSize:".96rem", color:"var(--text2)", lineHeight:1.75 } }, wine.notas)
+    h("div",{className:"detail-body"},
+      h("div",null,
+        h("p",{style:{fontSize:".48rem",letterSpacing:".2em",textTransform:"uppercase",color:"var(--muted)",marginBottom:".4rem"}},"Notas de Degustação"),
+        h("p",{className:"serif",style:{fontStyle:"italic",fontSize:".94rem",color:"var(--text2)",lineHeight:1.75}},wine.notas)
       ),
-      // Perfil
-      perfil && Object.keys(perfil).length > 0 && h("div", null,
-        h("p", { style:{ fontSize:".5rem", letterSpacing:".2em", textTransform:"uppercase", color:"var(--muted)", marginBottom:".7rem" } }, "Perfil de Sabor"),
-        h("div", { style:{ display:"flex", flexDirection:"column", gap:".42rem" } },
-          ...Object.entries(perfil).map(([k,v]) => h(FlavorBar, { key:k, label:k, value:v, color:tc }))
+      perfil&&Object.keys(perfil).length>0&&h("div",null,
+        h("p",{style:{fontSize:".48rem",letterSpacing:".2em",textTransform:"uppercase",color:"var(--muted)",marginBottom:".6rem"}},"Perfil de Sabor"),
+        h("div",{style:{display:"flex",flexDirection:"column",gap:".4rem"}},
+          ...Object.entries(perfil).map(([k,v])=>h(FlavorBar,{key:k,label:k,value:v,color:tc}))
         )
       ),
-      // Info grid
-      h("div", { className:"info-grid" },
+      h("div",{className:"info-grid"},
         ...[["Uvas",wine.uvas?.join(", ")],["Álcool",wine.alcool],["Temperatura",wine.temperatura],
             ["Decantação",wine.decantacao],["Guarda",wine.guarda],["País",wine.pais]]
           .filter(([,v])=>v)
-          .map(([l,v]) => h("div", { key:l, className:"info-cell" },
-            h("p", { className:"info-label" }, l),
-            h("p", { className:"info-val" }, v)
+          .map(([l,v])=>h("div",{key:l,className:"info-cell"},
+            h("p",{style:{fontSize:".45rem",color:"var(--muted)",letterSpacing:".15em",textTransform:"uppercase",marginBottom:2}},l),
+            h("p",{style:{fontSize:".7rem",color:"var(--text2)"}},v)
           ))
       ),
-      // Harmonização
-      wine.harmonizacao?.length > 0 && h("div", null,
-        h("p", { style:{ fontSize:".5rem", letterSpacing:".2em", textTransform:"uppercase", color:"var(--muted)", marginBottom:".5rem" } }, "Harmonização"),
-        h("div", { style:{ display:"flex", flexWrap:"wrap", gap:".35rem" } },
-          ...wine.harmonizacao.map(h2 => h("span", { key:h2,
-            style:{ padding:"3px 11px", background:"rgba(58,106,74,.15)", border:"1px solid rgba(58,106,74,.4)",
-              borderRadius:100, fontSize:".57rem", color:"var(--green)" } }, `🍽 ${h2}`))
+      wine.harmonizacao?.length>0&&h("div",null,
+        h("p",{style:{fontSize:".48rem",letterSpacing:".2em",textTransform:"uppercase",color:"var(--muted)",marginBottom:".4rem"}},"Harmonização"),
+        h("div",{style:{display:"flex",flexWrap:"wrap",gap:".32rem"}},
+          ...wine.harmonizacao.map(hh=>h("span",{key:hh,
+            style:{padding:"3px 10px",background:"rgba(58,106,74,.15)",border:"1px solid rgba(58,106,74,.4)",
+              borderRadius:100,fontSize:".55rem",color:"var(--green)"}},`🍽 ${hh}`))
         )
       )
     )
   );
 }
 
-/* ────────────────────────────────────────────
-   EXPLORER SECTION
-──────────────────────────────────────────── */
-function ExplorerSection({ apiKey }) {
-  const [query,    setQuery]    = useState("");
-  const [wines,    setWines]    = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [state,    setState]    = useState("idle");
-  const [errMsg,   setErrMsg]   = useState("");
-  const inputRef = useRef(null);
+/* ── EXPLORER ── */
+function Explorer({apiKey}){
+  const [query,setQuery]=useState("");
+  const [wines,setWines]=useState([]);
+  const [selected,setSelected]=useState(null);
+  const [state,setState]=useState("idle");
+  const [errMsg,setErrMsg]=useState("");
 
-  const chips = ["Malbec Argentino","Bordeaux","Barolo","Pinot Noir","vinho brasileiro","Champagne","Chianti","Cabernet Sauvignon"];
+  const chips=["Malbec Argentino","Bordeaux","Barolo","Pinot Noir",
+    "vinho brasileiro","Champagne","Chianti","Cabernet Sauvignon","Rosé Provence"];
 
-  async function doSearch(q) {
-    if (!q.trim() || state === "loading") return;
-    setState("loading"); setErrMsg(""); setWines([]); setSelected(null);
-    let list = [];
-    try {
-      list = await searchWines(q, apiKey);
-      if (!Array.isArray(list) || !list.length) throw new Error("Sem resultados");
-      setWines(list.map(w => ({...w, _viv:null})));
+  async function doSearch(q){
+    if(!q.trim()||state==="loading")return;
+    setState("loading");setErrMsg("");setWines([]);setSelected(null);
+    let list=[];
+    try{
+      list=await searchWines(q,apiKey);
+      if(!Array.isArray(list)||!list.length)throw new Error("Sem resultados");
+      setWines(list.map(w=>({...w,_viv:null})));
       setState("enriching");
-    } catch(e) {
-      setErrMsg(e.message);
-      setState("error");
-      return;
-    }
-    const enriched = await Promise.all(list.map(async w => ({...w, _viv: await enrichVivino(w.nome)})));
-    setWines(enriched);
-    setState("done");
+    }catch(e){setErrMsg(e.message);setState("error");return}
+    const enriched=await Promise.all(list.map(async w=>({...w,_viv:await enrichVivino(w.nome)})));
+    setWines(enriched);setState("done");
   }
 
-  const busy = state === "loading" || state === "enriching";
+  const busy=state==="loading"||state==="enriching";
 
-  return h("section", { id:"explorer" },
-    h("p", { className:"section-label" }, "Busca inteligente"),
-    h("h2", { className:"section-title" }, "Encontre seu vinho perfeito"),
-    h("div", { className:"divider" }),
-
-    // Search
-    h("div", { className:"search-wrap", style:{ marginBottom:"1rem" } },
-      h("span", { style:{ fontSize:"1rem", opacity:.4 } }, "🔍"),
-      h("input", { ref:inputRef, className:"search-input",
-        placeholder:"Nome, uva, região, safra, sabor...",
-        value:query, onChange:e=>setQuery(e.target.value),
-        onKeyDown:e=>e.key==="Enter"&&doSearch(query) }),
-      h("button", { className:"btn-search", onClick:()=>doSearch(query), disabled:busy||!query.trim() },
-        busy ? "..." : "Buscar")
+  return h("div",null,
+    h("div",{className:"search-wrap"},
+      h("span",{style:{fontSize:"1rem",opacity:.4}},"🔍"),
+      h("input",{className:"search-input",placeholder:"Nome, uva, região, safra, sabor...",
+        value:query,onChange:e=>setQuery(e.target.value),
+        onKeyDown:e=>e.key==="Enter"&&doSearch(query)}),
+      h("button",{className:"btn-search",onClick:()=>doSearch(query),disabled:busy||!query.trim()},
+        busy?"...":"Buscar")
     ),
-
-    wines.length === 0 && state !== "loading" && h("div", { style:{ display:"flex", flexWrap:"wrap", gap:".5rem", marginBottom:"2rem" } },
-      ...chips.map(s => h("button", { key:s, className:"chip", onClick:()=>{setQuery(s);doSearch(s)} }, s))
+    wines.length===0&&state!=="loading"&&h("div",{style:{display:"flex",flexWrap:"wrap",gap:".45rem",marginBottom:"2rem"}},
+      ...chips.map(s=>h("button",{key:s,className:"chip",onClick:()=>{setQuery(s);doSearch(s)}},s))
     ),
-
-    // Loading
-    state === "loading" && h("div", { style:{ textAlign:"center", padding:"3rem 0" } },
-      h("div", { style:{ display:"flex", justifyContent:"center", gap:6, marginBottom:"1rem" } },
-        ...[0,1,2,3,4].map(i => h("div", { key:i, style:{
-          width:5, height:22, borderRadius:3,
-          background:i%2?"var(--wine2)":"var(--wine)",
-          transformOrigin:"bottom",
-          animation:`wineRise 1.2s ease-in-out ${i*.15}s infinite`
-        }}))
+    state==="loading"&&h("div",{style:{textAlign:"center",padding:"3rem 0"}},
+      h("div",{style:{display:"flex",justifyContent:"center",gap:6,marginBottom:"1rem"}},
+        ...[0,1,2,3,4].map(i=>h("div",{key:i,style:{width:5,height:22,borderRadius:3,
+          background:i%2?"var(--wine2)":"var(--wine)",transformOrigin:"bottom",
+          animation:`wineRise 1.2s ease-in-out ${i*.15}s infinite`}}))
       ),
-      h("p", { className:"serif", style:{ fontStyle:"italic", color:"var(--muted)", fontSize:".9rem" } }, "Consultando o sommelier...")
+      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",fontSize:".88rem"}},"Consultando o sommelier...")
     ),
-
-    // Error
-    state === "error" && h("div", { style:{ textAlign:"center", padding:"2rem 0" } },
-      h("p", { className:"serif", style:{ fontStyle:"italic", color:"var(--muted)", marginBottom:"1rem" } }, "Algo deu errado. Verifique sua API key."),
-      errMsg && h("pre", { style:{ fontSize:".55rem", color:"#f66", background:"var(--card)",
-        border:"1px solid var(--border)", borderRadius:8, padding:".7rem", maxWidth:500, margin:"0 auto",
-        textAlign:"left", whiteSpace:"pre-wrap", wordBreak:"break-all" } }, errMsg)
+    state==="error"&&h("div",{style:{textAlign:"center",padding:"2rem 0"}},
+      h("p",{className:"serif",style:{fontStyle:"italic",color:"var(--muted)",marginBottom:"1rem"}},"Verifique sua API key e tente novamente."),
+      errMsg&&h("pre",{style:{fontSize:".52rem",color:"#f66",background:"var(--card)",
+        border:"1px solid var(--border)",borderRadius:8,padding:".7rem",maxWidth:500,margin:"0 auto",
+        textAlign:"left",whiteSpace:"pre-wrap",wordBreak:"break-all"}},errMsg)
     ),
-
-    // Results
-    wines.length > 0 && h("div", null,
-      h("div", { style:{ display:"flex", alignItems:"center", justifyContent:"space-between",
-        marginBottom:"1rem", flexWrap:"wrap", gap:".5rem" } },
-        h("div", { style:{ display:"flex", alignItems:"center", gap:".8rem", flexWrap:"wrap" } },
-          h("p", { style:{ fontSize:".57rem", color:"var(--muted)", letterSpacing:".15em", textTransform:"uppercase" } },
+    wines.length>0&&h("div",null,
+      h("div",{style:{display:"flex",alignItems:"center",justifyContent:"space-between",
+        marginBottom:"1rem",flexWrap:"wrap",gap:".5rem"}},
+        h("div",{style:{display:"flex",alignItems:"center",gap:".7rem",flexWrap:"wrap"}},
+          h("p",{style:{fontSize:".55rem",color:"var(--muted)",letterSpacing:".15em",textTransform:"uppercase"}},
             `${wines.length} vinhos · "${query}"`),
-          state === "enriching" && h("span", { style:{ fontSize:".5rem", color:"#f88", padding:"2px 9px",
-            borderRadius:100, background:"rgba(110,15,35,.25)", border:"1px solid rgba(180,40,60,.25)" } },
-            "🍇 buscando Vivino..."),
-          state === "done" && wines.some(w=>w._viv) && h("span", { style:{ fontSize:".5rem", color:"#f88",
-            padding:"2px 9px", borderRadius:100, background:"rgba(110,15,35,.25)", border:"1px solid rgba(180,40,60,.25)" } },
+          state==="enriching"&&h("span",{style:{fontSize:".48rem",color:"#f88",padding:"2px 8px",
+            borderRadius:100,background:"rgba(110,15,35,.25)",border:"1px solid rgba(180,40,60,.25)"}},"🍇 buscando Vivino..."),
+          state==="done"&&wines.some(w=>w._viv)&&h("span",{style:{fontSize:".48rem",color:"#f88",
+            padding:"2px 8px",borderRadius:100,background:"rgba(110,15,35,.25)",border:"1px solid rgba(180,40,60,.25)"}},
             `🍇 ${wines.filter(w=>w._viv).length} com dados Vivino`)
         ),
-        h("button", { className:"chip", onClick:()=>{ setState("idle"); setWines([]); setSelected(null); setQuery(""); } }, "Nova busca")
+        h("button",{className:"chip",onClick:()=>{setState("idle");setWines([]);setSelected(null);setQuery("")}},"Nova busca")
       ),
-      h("div", { className:"results-grid", style:{ display:"grid",
-        gridTemplateColumns: selected ? "1fr 1fr" : "1fr", gap:"1.2rem", alignItems:"start" } },
-        h("div", { style:{ display:"flex", flexDirection:"column", gap:".65rem" } },
-          ...wines.map((w,i) => h(WineCard, { key:w.nome+i, wine:w, index:i,
-            selected: selected?.nome === w.nome,
-            onSelect: w2 => setSelected(selected?.nome===w2.nome ? null : w2) }))
+      h("div",{className:"results-grid",style:{display:"grid",
+        gridTemplateColumns:selected?"1fr 1fr":"1fr",gap:"1.2rem",alignItems:"start"}},
+        h("div",{style:{display:"flex",flexDirection:"column",gap:".6rem"}},
+          ...wines.map((w,i)=>h(WineCard,{key:w.nome+i,wine:w,index:i,
+            selected:selected?.nome===w.nome,
+            onSelect:w2=>setSelected(selected?.nome===w2.nome?null:w2)}))
         ),
-        selected && h(DetailPanel, { wine:selected, onClose:()=>setSelected(null) })
+        selected&&h(DetailPanel,{wine:selected,onClose:()=>setSelected(null)})
       )
     )
   );
 }
 
-/* ────────────────────────────────────────────
-   APP PRINCIPAL
-──────────────────────────────────────────── */
-function App() {
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("adega_api_key") || "");
-  const [keyInput, setKeyInput] = useState("");
-  const [keySet, setKeySet] = useState(() => !!localStorage.getItem("adega_api_key"));
+/* ── APP ── */
+function App(){
+  const [apiKey,setApiKey]=useState(()=>localStorage.getItem("adega_key")||"");
+  const [keyInput,setKeyInput]=useState("");
+  const [keySet,setKeySet]=useState(()=>!!localStorage.getItem("adega_key"));
 
-  function saveKey() {
-    const k = keyInput.trim();
-    if (!k.startsWith("sk-ant-") && !k.startsWith("sk-")) { alert("API key inválida. Deve começar com sk-ant-"); return; }
-    localStorage.setItem("adega_api_key", k);
-    setApiKey(k); setKeySet(true);
+  function saveKey(){
+    const k=keyInput.trim();
+    if(!k.startsWith("sk-ant-")){alert("API key inválida. Deve começar com sk-ant-");return}
+    localStorage.setItem("adega_key",k);setApiKey(k);setKeySet(true);
+  }
+  function clearKey(){
+    localStorage.removeItem("adega_key");setApiKey("");setKeyInput("");setKeySet(false);
   }
 
-  function clearKey() {
-    localStorage.removeItem("adega_api_key");
-    setApiKey(""); setKeyInput(""); setKeySet(false);
+  // Scroll suave para a seção de explorar
+  function scrollToExplorer(e){
+    e.preventDefault();
+    document.getElementById("explorer-section")?.scrollIntoView({behavior:"smooth"});
   }
 
-  return h("div", null,
-    // NAV
-    h("nav", null,
-      h("a", { className:"nav-logo", href:"#" }, "Adega Digital"),
-      h("div", { className:"nav-links" },
-        h("a", { className:"nav-link", href:"#features" }, "Funcionalidades"),
-        h("a", { className:"nav-link", href:"#explorer" }, "Explorar"),
-        h("a", { className:"nav-link", href:"https://github.com/Caxito01/adegadigital", target:"_blank" }, "GitHub"),
-        keySet && h("button", { onClick:clearKey, style:{
-          fontSize:".52rem", color:"var(--muted)", background:"none", border:"1px solid var(--border2)",
-          borderRadius:100, padding:"4px 12px", cursor:"pointer", fontFamily:"'DM Mono',monospace"
-        } }, "API key ✕")
+  return h("div",null,
+    /* NAV */
+    h("nav",null,
+      h("a",{className:"nav-logo",href:"#"},"Adega Digital"),
+      h("div",{className:"nav-links"},
+        h("a",{className:"nav-link",href:"#features-section"},"Recursos"),
+        h("button",{className:"nav-link",onClick:scrollToExplorer},"Explorar"),
+        h("a",{className:"nav-link",href:"https://github.com/Caxito01/adegadigital",target:"_blank"},"GitHub"),
+        keySet&&h("button",{onClick:clearKey,style:{fontSize:".5rem",color:"var(--muted)",background:"none",
+          border:"1px solid var(--border2)",borderRadius:100,padding:"4px 10px",cursor:"pointer",
+          fontFamily:"'DM Mono',monospace"}},"key ✕")
       )
     ),
 
-    // HERO
-    h("div", { className:"hero" },
-      h("div", { className:"hero-bg" }),
-      h("div", { className:"hero-line" }),
-      h("p", { style:{ fontSize:".55rem", letterSpacing:".35em", textTransform:"uppercase",
-        color:"var(--wine3)", margin:"1.5rem 0 .8rem" } }, "Wine Intelligence"),
-      h("h1", { className:"hero-title" }, "Adega Digital"),
-      h("p", { className:"hero-sub" }, "Sommelier com Inteligência Artificial"),
-      h("p", { className:"hero-desc" },
-        "Busque qualquer vinho do mundo. Notas de degustação, perfil de sabor, harmonização e enriquecimento com dados reais da Vivino."),
-      h("div", { style:{ display:"flex", gap:"1rem", flexWrap:"wrap", justifyContent:"center" } },
-        h("a", { className:"btn-wine", href:"#explorer" }, "🍷 Explorar vinhos"),
-        h("a", { className:"btn-outline", href:"https://github.com/Caxito01/adegadigital", target:"_blank" }, "Ver no GitHub")
+    /* HERO */
+    h("div",{className:"hero"},
+      h("div",{className:"hero-bg"}),
+      h("div",{className:"hero-vline"}),
+      h("p",{style:{fontSize:".52rem",letterSpacing:".35em",textTransform:"uppercase",
+        color:"var(--wine3)",margin:"1.5rem 0 .7rem"}},"Wine Intelligence"),
+      h("h1",{className:"hero-title"},"Adega Digital"),
+      h("p",{className:"hero-sub"},"Sommelier com Inteligência Artificial"),
+      h("p",{className:"hero-desc"},
+        "Busque qualquer vinho do mundo. Notas de degustação, perfil de sabor, harmonização e dados reais da Vivino."),
+      h("div",{style:{display:"flex",gap:"1rem",flexWrap:"wrap",justifyContent:"center"}},
+        h("button",{className:"btn-wine",onClick:scrollToExplorer},"🍷 Explorar vinhos"),
+        h("a",{className:"btn-outline",href:"https://github.com/Caxito01/adegadigital",target:"_blank"},"Ver no GitHub")
       ),
-      h("div", { className:"hero-line", style:{ marginTop:"3rem" } })
+      h("div",{className:"scroll-hint",onClick:scrollToExplorer},
+        h("p",null,"scroll"),
+        h("span",{className:"scroll-arrow"},"↓")
+      )
     ),
 
-    // FEATURES
-    h("div", { style:{ background:"var(--bg2)", borderTop:"1px solid var(--border)", borderBottom:"1px solid var(--border)", padding:"5rem 1.5rem" } },
-      h("div", { style:{ maxWidth:1100, margin:"0 auto" } },
-        h("p", { className:"section-label", style:{ textAlign:"center" } }, "Recursos"),
-        h("h2", { className:"section-title", style:{ textAlign:"center" } }, "O que a Adega Digital faz"),
-        h("div", { className:"divider" }),
-        h("div", { className:"features-grid", id:"features" },
+    /* FEATURES */
+    h("div",{id:"features-section",style:{background:"var(--bg2)",borderTop:"1px solid var(--border)",borderBottom:"1px solid var(--border)",padding:"5rem 1.5rem"}},
+      h("div",{style:{maxWidth:1100,margin:"0 auto"}},
+        h("p",{className:"section-label",style:{textAlign:"center"}},"Funcionalidades"),
+        h("h2",{className:"section-title",style:{textAlign:"center"}},"O que a Adega Digital oferece"),
+        h("div",{className:"divider"}),
+        h("div",{className:"features-grid"},
           ...[
-            ["🔍","Busca Inteligente","Busque por nome, uva, região, safra, sabor, país ou qualquer característica do vinho."],
-            ["🤖","Claude AI Sommelier","Dados precisos gerados por IA com conhecimento profundo de enologia mundial."],
-            ["🍇","Enriquecimento Vivino","Rating real, imagem do rótulo e preço de mercado direto da maior plataforma de vinhos."],
-            ["📊","Perfil de Sabor","Visualize acidez, taninos, corpo e frutado em barras interativas para cada vinho."],
-            ["🍽","Harmonização","Sugestões detalhadas de pratos que combinam com cada vinho selecionado."],
-            ["🌡","Dados Técnicos","Temperatura de serviço, tempo de decantação, potencial de guarda e teor alcoólico."],
-          ].map(([icon,title,desc]) => h("div", { key:title, className:"feature-card" },
-            h("div", { className:"feature-icon" }, icon),
-            h("h3", { className:"feature-title" }, title),
-            h("p", { className:"feature-desc" }, desc)
+            ["🔍","Busca Livre","Por nome, uva, região, safra, sabor, país ou qualquer característica."],
+            ["🤖","AI Sommelier","Dados precisos com conhecimento profundo de enologia mundial."],
+            ["🍇","Dados Vivino","Rating real, imagem do rótulo e preço de mercado direto da Vivino."],
+            ["📊","Perfil de Sabor","Acidez, taninos, corpo e frutado em barras interativas."],
+            ["🍽","Harmonização","Sugestões de pratos que combinam com cada vinho."],
+            ["🌡","Dados Técnicos","Temperatura, decantação, potencial de guarda e teor alcoólico."],
+          ].map(([icon,title,desc])=>h("div",{key:title,className:"feature-card"},
+            h("div",{className:"feature-icon"},icon),
+            h("h3",{className:"feature-title"},title),
+            h("p",{className:"feature-desc"},desc)
           ))
         )
       )
     ),
 
-    // API KEY SETUP ou EXPLORER
-    !keySet
-        ? h("div", { id:"explorer", style:{ padding:"6rem 1.5rem" } },
-          h("div", { className:"setup-box" },
-            h("p", { style:{ fontSize:"2rem", marginBottom:"1rem" } }, "🔑"),
-            h("h2", { className:"serif", style:{ fontSize:"1.8rem", fontStyle:"italic", fontWeight:300,
-              color:"var(--text)", marginBottom:".5rem" } }, "Configure sua API Key"),
-            h("p", { className:"api-hint", style:{ marginBottom:"1.5rem" } },
-              "Para usar o sommelier AI, você precisa de uma API key da Anthropic."),
-            h("div", { style:{ textAlign:"left", marginBottom:"1.2rem" } },
-              h("p", { style:{ fontSize:".58rem", color:"var(--muted)", marginBottom:".5rem", letterSpacing:".1em" } },
-                "Como obter sua key:"),
-              h("ol", { style:{ fontSize:".6rem", color:"var(--text2)", lineHeight:2,
-                paddingLeft:"1.2rem" } },
-                h("li", null, h("a", { href:"https://console.anthropic.com", target:"_blank",
-                  style:{ color:"var(--accent)", textDecoration:"none" } }, "console.anthropic.com")),
-                h("li", null, "Crie uma conta gratuita"),
-                h("li", null, "API Keys → Create Key"),
-                h("li", null, "Cole abaixo ↓")
-              )
+    /* EXPLORER / SETUP */
+    h("div",{id:"explorer-section",style:{padding:"5rem 1.5rem",maxWidth:1100,margin:"0 auto"}},
+      h("p",{className:"section-label"},"Busca inteligente"),
+      h("h2",{className:"section-title"},"Encontre seu vinho perfeito"),
+      h("div",{className:"divider"}),
+      !keySet
+        ? h("div",{className:"setup-box"},
+            h("p",{style:{fontSize:"1.8rem",marginBottom:"1rem"}},"🔑"),
+            h("h3",{className:"serif",style:{fontSize:"1.7rem",fontStyle:"italic",fontWeight:300,
+              color:"var(--text)",marginBottom:".5rem"}},"Configure sua API Key"),
+            h("p",{style:{fontSize:".6rem",color:"var(--muted)",lineHeight:1.7,marginBottom:"1.5rem"}},
+              "Para usar o sommelier AI você precisa de uma API key gratuita da Anthropic."),
+            h("ol",{style:{fontSize:".6rem",color:"var(--text2)",lineHeight:2.2,
+              paddingLeft:"1.2rem",textAlign:"left",marginBottom:"1.2rem"}},
+              h("li",null,h("a",{href:"https://console.anthropic.com",target:"_blank",
+                style:{color:"var(--accent)",textDecoration:"none"}},"Acesse console.anthropic.com")),
+              h("li",null,"Crie uma conta gratuita"),
+              h("li",null,"API Keys → Create Key"),
+              h("li",null,"Cole abaixo ↓")
             ),
-            h("input", { className:"api-input", type:"password",
+            h("input",{className:"api-input",type:"password",
               placeholder:"sk-ant-api03-...",
-              value:keyInput, onChange:e=>setKeyInput(e.target.value),
-              onKeyDown:e=>e.key==="Enter"&&saveKey() }),
-            h("p", { className:"api-hint", style:{ marginBottom:"1.2rem" } },
-              "🔒 A key é salva apenas no seu navegador (localStorage). Nunca é enviada para servidores externos além da Anthropic."),
-            h("button", { className:"btn-wine", onClick:saveKey, style:{ width:"100%", justifyContent:"center" } },
-              "Salvar e começar →")
+              value:keyInput,onChange:e=>setKeyInput(e.target.value),
+              onKeyDown:e=>e.key==="Enter"&&saveKey()}),
+            h("p",{style:{fontSize:".55rem",color:"var(--muted)",lineHeight:1.6,marginBottom:"1.2rem"}},
+              "🔒 Salva apenas no seu navegador (localStorage). Nunca enviada para servidores externos."),
+            h("button",{className:"btn-wine",onClick:saveKey,
+              style:{width:"100%",justifyContent:"center",borderRadius:10}},"Salvar e começar →")
           )
-        )
-      : h(ExplorerSection, { apiKey }),
+        : h(Explorer,{apiKey})
+    ),
 
-    // FOOTER
-    h("footer", null,
-      h("p", { className:"footer-logo" }, "Adega Digital"),
-      h("p", { className:"footer-sub" }, "Wine Intelligence · Claude AI + Vivino"),
-      h("div", { className:"footer-links" },
-        h("a", { className:"footer-link", href:"https://github.com/Caxito01/adegadigital", target:"_blank" }, "GitHub"),
-        h("a", { className:"footer-link", href:"https://console.anthropic.com", target:"_blank" }, "Anthropic API"),
-        h("a", { className:"footer-link", href:"https://www.vivino.com", target:"_blank" }, "Vivino"),
+    /* FOOTER */
+    h("footer",null,
+      h("p",{className:"serif",style:{fontStyle:"italic",fontSize:"1.8rem",fontWeight:300,color:"var(--text)",marginBottom:".4rem"}},"Adega Digital"),
+      h("p",{style:{fontSize:".5rem",color:"var(--muted)",letterSpacing:".2em",textTransform:"uppercase",marginBottom:"1.5rem"}},"Wine Intelligence · Claude AI + Vivino"),
+      h("div",{style:{display:"flex",justifyContent:"center",gap:"1.5rem",flexWrap:"wrap",marginBottom:"1.5rem"}},
+        h("a",{href:"https://github.com/Caxito01/adegadigital",target:"_blank",
+          style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"GitHub"),
+        h("a",{href:"https://console.anthropic.com",target:"_blank",
+          style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"Anthropic API"),
+        h("a",{href:"https://www.vivino.com",target:"_blank",
+          style:{fontSize:".55rem",color:"var(--muted)",textDecoration:"none",letterSpacing:".1em"}},"Vivino")
       ),
-      h("p", { style:{ fontSize:".48rem", color:"var(--muted2)", marginTop:"1.5rem", letterSpacing:".15em" } },
-        "Desenvolvido por Caxito01 · Dados simulados para demonstração")
+      h("p",{style:{fontSize:".45rem",color:"var(--muted2)",letterSpacing:".12em"}},"Desenvolvido por Caxito01")
     )
   );
 }
