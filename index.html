@@ -355,7 +355,7 @@ async function searchWines(query, apiKey) {
     method:"POST",
     headers:{ "Content-Type":"application/json", "x-api-key": apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true" },
     body: JSON.stringify({
-      model:"claude-opus-4-5",
+      model:"claude-sonnet-4-5",
       max_tokens:2000,
       messages:[{ role:"user", content:
 `Você é sommelier especialista. Busca: "${query}"
@@ -632,7 +632,7 @@ function App() {
 
   function saveKey() {
     const k = keyInput.trim();
-    if (!k.startsWith("sk-ant-")) { alert("API key inválida. Deve começar com sk-ant-"); return; }
+    if (!k.startsWith("sk-ant-") && !k.startsWith("sk-")) { alert("API key inválida. Deve começar com sk-ant-"); return; }
     localStorage.setItem("adega_api_key", k);
     setApiKey(k); setKeySet(true);
   }
