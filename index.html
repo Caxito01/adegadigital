@@ -130,7 +130,15 @@ function FlavorBar({label,value,color}){
 
 /* ── VIVINO API (BUSCA DIRETA) ── */
 async function searchWines(query){
-  const target = `https://www.vivino.com/api/explore/explore?q=${encodeURIComponent(query)}&language=pt&currency_code=BRL&per_page=12`;
+  const params = new URLSearchParams({
+    q: query,
+    language: "pt",
+    currency_code: "BRL",
+    per_page: "12"
+  });
+  // Vivino exige pelo menos um filtro além do termo de busca
+  ["1","2","3","4","5"].forEach(id => params.append("wine_type_ids[]", id));
+  const target = `https://www.vivino.com/api/explore/explore?${params.toString()}`;
   const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(target)}`, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(5000)
