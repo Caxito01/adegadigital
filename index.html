@@ -699,7 +699,7 @@ function App() {
 
     // API KEY SETUP ou EXPLORER
     !keySet
-      ? h("div", { style:{ padding:"6rem 1.5rem" } },
+        ? h("div", { id:"explorer", style:{ padding:"6rem 1.5rem" } },
           h("div", { className:"setup-box" },
             h("p", { style:{ fontSize:"2rem", marginBottom:"1rem" } }, "🔑"),
             h("h2", { className:"serif", style:{ fontSize:"1.8rem", fontStyle:"italic", fontWeight:300,
