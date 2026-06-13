@@ -131,7 +131,7 @@ function FlavorBar({label,value,color}){
 /* ── VIVINO API (BUSCA DIRETA) ── */
 async function searchWines(query){
   const baseParams = new URLSearchParams({ q: query, language: "pt", currency_code: "BRL", per_page: "12" });
-  const typeIds = ["1","2","3","4","5"].map(id => `wine_type_ids[]=${id}`).join("&");
+  const typeIds = ["1","2","3"].map(id => `wine_type_ids[]=${id}`).join("&");
   const target = `https://www.vivino.com/api/explore/explore?${baseParams.toString()}&${typeIds}`;
 
   const proxies = [
