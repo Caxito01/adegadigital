@@ -128,78 +128,37 @@ function FlavorBar({label,value,color}){
   );
 }
 
-/* ── VIVINO API (BUSCA DIRETA) ── */
-async function searchWines(query){
-  const baseParams = new URLSearchParams({ q: query, language: "pt", currency_code: "BRL", per_page: "12" });
-  const typeIds = ["1","2","3"].map(id => `wine_type_ids[]=${id}`).join("&");
-  const target = `https://www.vivino.com/api/explore/explore?${baseParams.toString()}&${typeIds}`;
+/* ── BANCO DE DADOS LOCAL ── */
+let _winesDB = null;
+async function loadWinesDB() {
+  if (_winesDB) return _winesDB;
+  const res = await fetch("wines.json");
+  _winesDB = await res.json();
+  return _winesDB;
+}
 
-  const proxies = [
-    url => `https://vivino-proxy.carloscaxito.workers.dev/?url=${encodeURIComponent(url)}`,
-  ];
+async function searchWines(query) {
+  const db = await loadWinesDB();
+  const terms = query.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").split(/\s+/).filter(Boolean);
 
-  let data = null;
-  let lastErr = "Todos os proxies falharam";
+  const scored = db.map(wine => {
+    const haystack = [
+      wine.nome, wine.produtor, wine.pais, wine.regiao, wine.tipo,
+      ...(wine.uvas || []), ...(wine.harmonizacao || []), wine.descricao || ""
+    ].join(" ").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
 
-  for (const buildUrl of proxies) {
-    try {
-      const res = await fetch(buildUrl(target), {
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(8000)
-      });
-      if (!res.ok) { lastErr = `HTTP ${res.status}`; continue; }
-      const text = await res.text();
-      if (!text || !text.trim().startsWith("{")) { lastErr = "Resposta não é JSON"; continue; }
-      data = JSON.parse(text);
-      break;
-    } catch (err) {
-      lastErr = err?.message || String(err);
+    let score = 0;
+    for (const t of terms) {
+      if (wine.nome.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").includes(t)) score += 10;
+      else if (haystack.includes(t)) score += 3;
     }
-  }
+    return { wine, score };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 12);
 
-  if (!data) throw new Error(lastErr);
-
-  const matches = data?.explore_vintage?.matches || [];
-  if(matches.length === 0) return [];
-
-  return matches.map((match)=>{
-    const v = match.vintage || {};
-    const w = v.wine || {};
-    const stats = v.statistics || {};
-    const region = w.region || {};
-    const country = region.country || {};
-    const grapes = (w.grapes || []).map(g=>g.name).filter(Boolean);
-    const style = w.style?.name || "";
-    const price = match.price?.amount ? `${match.price.currency || "R$"} ${Number(match.price.amount).toFixed(2)}` : null;
-
-    return {
-      nome: v.name || w.name || "Vinho",
-      produtor: w.winery?.name || "",
-      pais: country.name || "",
-      regiao: region.name || "",
-      ano: v.year || w.vintage || "",
-      tipo: w.type || "Tinto",
-      uvas: grapes.length ? grapes : [style || ""].filter(Boolean),
-      pontuacao: stats.ratings_average ? Math.round(stats.ratings_average * 10) : 88,
-      preco: price || "",
-      alcool: w.alcohol || "",
-      temperatura: "",
-      decantacao: "",
-      guarda: "",
-      descricao: w.story || w.tasting_notes || "",
-      notas: w.tasting_notes || w.story || "",
-      perfil: {},
-      harmonizacao: [],
-      _viv: {
-        rating: stats.ratings_average,
-        count: stats.ratings_count,
-        img: v.image?.location ? `https:${v.image.location}` : null,
-        url: v.id ? `https://www.vivino.com/w/${v.id}` : null,
-        preco: price || null,
-        perfil: {}
-      }
-    };
-  }).filter(w=>w.nome);
+  return scored.map(({ wine }) => ({
+    ...wine,
+    _viv: { rating: wine.pontuacao / 10, count: null, img: null, url: null, preco: wine.preco || null, perfil: {} }
+  }));
 }
 
 const enrichVivino = null;
