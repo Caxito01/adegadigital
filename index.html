@@ -143,29 +143,31 @@ async function searchWines(query){
   const proxies = [
     url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
     url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://r.jina.ai/http://` + url.replace(/^https?:\/\//, "")
+    url => `https://thingproxy.freeboard.io/fetch/${url}`,
+    url => `https://proxy.cors.sh/${url}`,
   ];
 
-  let res = null;
-  let lastErr = "";
+  let data = null;
+  let lastErr = "Todos os proxies falharam";
+
   for (const buildUrl of proxies) {
     try {
-      res = await fetch(buildUrl(target), {
+      const res = await fetch(buildUrl(target), {
         headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(6000)
+        signal: AbortSignal.timeout(8000)
       });
-      if (res.ok) break;
-      lastErr = await res.text();
+      if (!res.ok) { lastErr = `HTTP ${res.status}`; continue; }
+      const text = await res.text();
+      if (!text || !text.trim().startsWith("{")) { lastErr = "Resposta não é JSON"; continue; }
+      data = JSON.parse(text);
+      break;
     } catch (err) {
       lastErr = err?.message || String(err);
     }
   }
 
-  if (!res || !res.ok) {
-    throw new Error(`HTTP ${res?.status || "---"}: ${String(lastErr).slice(0,300)}`);
-  }
+  if (!data) throw new Error(lastErr);
 
-  const data = await res.json();
   const matches = data?.explore_vintage?.matches || [];
   if(matches.length === 0) return [];
 
