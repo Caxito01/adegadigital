@@ -141,10 +141,7 @@ async function searchWines(query){
   const target = `https://www.vivino.com/api/explore/explore?${params.toString()}`;
 
   const proxies = [
-    url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-    url => `https://thingproxy.freeboard.io/fetch/${url}`,
-    url => `https://proxy.cors.sh/${url}`,
+    url => `https://vivino-proxy.carloscaxito.workers.dev/?url=${encodeURIComponent(url)}`,
   ];
 
   let data = null;
